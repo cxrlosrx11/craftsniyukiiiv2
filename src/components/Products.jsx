@@ -228,51 +228,51 @@ export default function Products() {
 
       {filtered.length === 0 ? (
         <div className="empty-box">No products match these filters.</div>
-      ) : filtered.map((p) => (
-        <div className={'plist-item ' + (p.archived ? 'archived' : '')} key={p.id}>
-          <div className="plist-top">
-            <div className="plist-title">
-              <div className="plist-checkwrap">
-                <input type="checkbox" checked={selected.includes(p.id)} onChange={() => toggleSelect(p.id)} />
+      ) : (
+        <div className="plist-grid">
+          {filtered.map((p) => (
+            <div className={'plist-card ' + (p.archived ? 'archived ' : '') + (selected.includes(p.id) ? 'selected' : '')} key={p.id}>
+              <div className="plist-card-media">
+                <div className="plist-card-checkwrap">
+                  <input type="checkbox" checked={selected.includes(p.id)} onChange={() => toggleSelect(p.id)} />
+                </div>
+                {p.image ? <img src={p.image} alt={p.name} /> : (p.emoji || '🩷')}
+                {p.archived && <span className="plist-badge archived-badge" style={{ position: 'absolute', top: 9, right: 9 }}>Archived</span>}
               </div>
-              <div className="plist-title-meta">
-                <span className="plist-name">{p.emoji || '🩷'} {p.name}</span>
-                <div className="plist-tags">
+              <div className="plist-card-body">
+                <span className="plist-card-name">{p.name}</span>
+                <div className="plist-card-tags">
                   <span className="plist-cat">{p.category}</span>
                   {p.ip && <span className="plist-ip">{p.ip}</span>}
-                  {p.archived && <span className="plist-cat plist-badge archived-badge">Archived</span>}
+                </div>
+                <div className="plist-card-stats">
+                  <div className="plist-card-stat">
+                    <span className="plist-card-stat-label">Price</span>
+                    <span className="plist-card-stat-value">{money(p.price, cur)}</span>
+                  </div>
+                  <div className="plist-card-stat">
+                    <span className="plist-card-stat-label">Cost</span>
+                    <span className="plist-card-stat-value">{money(p.cost, cur)}</span>
+                  </div>
+                  <div className="plist-card-stat">
+                    <span className="plist-card-stat-label">Stock</span>
+                    <span className={'plist-card-stat-value ' + (p.stock <= 0 ? 'danger' : (p.stock <= p.lowStockAt ? 'warn' : ''))}>{p.stock}</span>
+                  </div>
+                  <div className="plist-card-stat">
+                    <span className="plist-card-stat-label">Low at</span>
+                    <span className="plist-card-stat-value">{p.lowStockAt}</span>
+                  </div>
+                </div>
+                <div className="plist-card-actions">
+                  <button className="btn btn-ghost" title="Edit" onClick={() => openEdit(p.id)}>✎ Edit</button>
+                  <button className="btn btn-ghost" title={p.archived ? 'Unarchive' : 'Archive'} onClick={() => toggleArchive(p.id)}>🗄</button>
+                  <button className="btn btn-ghost" title="Delete" onClick={() => deleteProduct(p.id)}>🗑</button>
                 </div>
               </div>
             </div>
-            <div className="plist-actions">
-              <button className="icon-btn" title="Edit" onClick={() => openEdit(p.id)}>✎</button>
-              <button className="icon-btn" title={p.archived ? 'Unarchive' : 'Archive'} onClick={() => toggleArchive(p.id)}>🗄</button>
-              <button className="icon-btn" title="Delete" onClick={() => deleteProduct(p.id)}>🗑</button>
-            </div>
-          </div>
-          <div className="plist-stats">
-            <div className="plist-stat-box">
-              <span className="plist-stat-icon">💲</span>
-              <div><span className="plist-stat-label">Price</span><span className="plist-stat-value">{money(p.price, cur)}</span></div>
-            </div>
-            <div className="plist-stat-box">
-              <span className="plist-stat-icon">📦</span>
-              <div><span className="plist-stat-label">Cost</span><span className="plist-stat-value">{money(p.cost, cur)}</span></div>
-            </div>
-            <div className="plist-stat-box">
-              <span className="plist-stat-icon">🗃</span>
-              <div>
-                <span className="plist-stat-label">Stock</span>
-                <span className={'plist-stat-value ' + (p.stock <= 0 ? 'danger' : (p.stock <= p.lowStockAt ? 'warn' : ''))}>{p.stock}</span>
-              </div>
-            </div>
-            <div className="plist-stat-box">
-              <span className="plist-stat-icon">🔔</span>
-              <div><span className="plist-stat-label">Low at</span><span className="plist-stat-value">{p.lowStockAt}</span></div>
-            </div>
-          </div>
+          ))}
         </div>
-      ))}
+      )}
 
       {modal && modal.type === 'product' && (
         <Modal title={modal.editId ? 'Edit product' : 'Add product'} onClose={() => setModal(null)}>
