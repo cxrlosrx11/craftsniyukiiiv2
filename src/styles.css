@@ -533,8 +533,23 @@
     .page-head h1{font-size:22px;}
     .currency-box{padding:7px 10px;}
     .stat-grid{grid-template-columns:1fr;}
-    .quick-actions{grid-template-columns:1fr;}
     .plist-stats{grid-template-columns:1fr;}
+
+    /* Quick actions: fixed square buttons pinned to the bottom of the screen (mobile only) */
+    .quick-actions-panel{border:none;padding:0;margin:0 0 18px;background:transparent;height:88px;}
+    .quick-actions-panel .panel-head{display:none;}
+    .quick-actions-panel .quick-actions{
+      position:fixed;left:0;right:0;bottom:0;z-index:130;
+      display:flex;justify-content:center;gap:14px;
+      background:#fff;border-top:1px solid var(--border);
+      padding:10px 16px calc(10px + env(safe-area-inset-bottom));
+      box-shadow:0 -8px 20px rgba(42,22,32,0.12);
+    }
+    .quick-actions-panel .quick-btn{
+      flex:none;width:64px;height:64px;padding:6px 4px;
+      border-radius:14px;gap:3px;font-size:10px;line-height:1.15;
+    }
+    .quick-actions-panel .quick-btn .qi{width:22px;height:22px;font-size:12px;}
     .ov-product-grid{grid-template-columns:repeat(2,minmax(0,1fr));}
     .plist-grid{grid-template-columns:1fr;}
     .share-grid{grid-template-columns:1fr;}
