@@ -59,7 +59,7 @@ export default function Overview({ goTo }) {
             </div>
           </div>
 
-          <div className="panel">
+          <div className="panel quick-actions-panel">
             <div className="panel-head">
               <div className="panel-title">Quick actions</div>
             </div>
