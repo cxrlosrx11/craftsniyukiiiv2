@@ -296,7 +296,7 @@
 
   /* ---------- product tab: box-style cards (like quick sale) ---------- */
   .plist-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
-  .plist-card{border:1px solid var(--border);border-radius:14px;background:#fff;overflow:hidden;position:relative;transition:box-shadow .15s ease;}
+  .plist-card{border:1px solid var(--border);border-radius:0 0 14px 14px;background:#fff;overflow:hidden;position:relative;transition:box-shadow .15s ease;}
   .plist-card:hover{box-shadow:var(--shadow);}
   .plist-card.archived{opacity:.6;}
   .plist-card.selected{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft) inset;}
