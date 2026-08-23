@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useShop } from '../lib/ShopContext.jsx';
 import Modal from './Modal.jsx';
 import { money, uid, resizeImageFile } from '../lib/utils.js';
@@ -10,6 +10,106 @@ function logStock(data, productId, name, delta, resultingStock) {
 
 function emptyBulkRow() {
   return { id: uid('row'), name: '', sku: '', price: '', cost: '', stock: '', lowStockAt: '', emoji: '', image: null };
+}
+
+function ImageCropper({ src, onCancel, onSave }) {
+  const VS = 260; // square viewport size in px
+  const [natural, setNatural] = useState(null);
+  const [zoom, setZoom] = useState(1);
+  const [pos, setPos] = useState({ x: 0, y: 0 });
+  const containerRef = useRef(null);
+  const imgRef = useRef(null);
+  const dragRef = useRef(null);
+
+  function clampPos(p, dW, dH) {
+    const minX = Math.min(0, VS - dW), maxX = 0;
+    const minY = Math.min(0, VS - dH), maxY = 0;
+    return { x: Math.min(maxX, Math.max(minX, p.x)), y: Math.min(maxY, Math.max(minY, p.y)) };
+  }
+
+  function handleImgLoad(e) {
+    const w = e.target.naturalWidth, h = e.target.naturalHeight;
+    const cover = Math.max(VS / w, VS / h);
+    setNatural({ w, h });
+    setZoom(1);
+    setPos({ x: (VS - w * cover) / 2, y: (VS - h * cover) / 2 });
+  }
+
+  const coverScale = natural ? Math.max(VS / natural.w, VS / natural.h) : 1;
+  const scale = coverScale * zoom;
+  const dW = natural ? natural.w * scale : VS;
+  const dH = natural ? natural.h * scale : VS;
+
+  useEffect(() => {
+    if (!natural) return;
+    setPos((p) => clampPos(p, dW, dH));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [zoom, natural]);
+
+  function onPointerDown(e) {
+    e.preventDefault();
+    if (containerRef.current) containerRef.current.setPointerCapture(e.pointerId);
+    dragRef.current = { startX: e.clientX, startY: e.clientY, startPos: pos };
+  }
+  function onPointerMove(e) {
+    if (!dragRef.current) return;
+    const dx = e.clientX - dragRef.current.startX;
+    const dy = e.clientY - dragRef.current.startY;
+    setPos(clampPos({ x: dragRef.current.startPos.x + dx, y: dragRef.current.startPos.y + dy }, dW, dH));
+  }
+  function onPointerUp(e) {
+    dragRef.current = null;
+    try { if (containerRef.current) containerRef.current.releasePointerCapture(e.pointerId); } catch (err) { /* noop */ }
+  }
+
+  function handleSave() {
+    if (!imgRef.current || !natural) return;
+    const outputSize = 640;
+    const canvas = document.createElement('canvas');
+    canvas.width = outputSize; canvas.height = outputSize;
+    const ctx = canvas.getContext('2d');
+    const sx = (0 - pos.x) / scale;
+    const sy = (0 - pos.y) / scale;
+    const sSize = VS / scale;
+    ctx.drawImage(imgRef.current, sx, sy, sSize, sSize, 0, 0, outputSize, outputSize);
+    onSave(canvas.toDataURL('image/jpeg', 0.85));
+  }
+
+  return (
+    <div>
+      <div
+        ref={containerRef}
+        style={{
+          width: VS, height: VS, borderRadius: 12, overflow: 'hidden', position: 'relative',
+          background: 'var(--accent-softer)', margin: '0 auto', cursor: 'grab', touchAction: 'none'
+        }}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        onPointerCancel={onPointerUp}
+      >
+        <img
+          ref={imgRef}
+          src={src}
+          alt=""
+          onLoad={handleImgLoad}
+          draggable={false}
+          style={{ position: 'absolute', left: pos.x, top: pos.y, width: dW, height: dH, maxWidth: 'none', userSelect: 'none', pointerEvents: 'none' }}
+        />
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 12 }}>
+        <span style={{ fontSize: 13 }}>🔍</span>
+        <input type="range" min="1" max="3" step="0.01" value={zoom} onChange={(e) => setZoom(parseFloat(e.target.value))} style={{ flex: 1 }} />
+        <span style={{ fontSize: 15 }}>🔍</span>
+      </div>
+      <p className="hint small" style={{ textAlign: 'center', marginTop: 6 }}>Drag the photo to reposition it, use the slider to zoom.</p>
+      <div className="modal-actions">
+        <button type="button" className="btn btn-ghost" onClick={onCancel}>Cancel</button>
+        <div style={{ flex: 1 }} />
+        <button type="button" className="btn btn-primary" onClick={handleSave}>Save crop</button>
+      </div>
+    </div>
+  );
 }
 
 export default function Products() {
@@ -105,8 +205,21 @@ export default function Products() {
     });
   }
   async function bulkSetRowImage(rowId, file) {
-    const dataUrl = await resizeImageFile(file, 640);
-    setModal((m) => ({ ...m, rows: m.rows.map((r) => r.id === rowId ? { ...r, image: dataUrl || null } : r) }));
+    const dataUrl = await resizeImageFile(file, 1200);
+    setModal((m) => ({ ...m, cropRowId: rowId, cropSrc: dataUrl || '' }));
+  }
+  function bulkOpenRecrop(rowId, currentImage) {
+    if (!currentImage) return;
+    setModal((m) => ({ ...m, cropRowId: rowId, cropSrc: currentImage }));
+  }
+  function confirmBulkCrop(croppedDataUrl) {
+    setModal((m) => ({
+      ...m, cropRowId: null, cropSrc: null,
+      rows: m.rows.map((r) => r.id === m.cropRowId ? { ...r, image: croppedDataUrl } : r)
+    }));
+  }
+  function cancelBulkCrop() {
+    setModal((m) => ({ ...m, cropRowId: null, cropSrc: null }));
   }
   function bulkRemoveRowImage(rowId) {
     setModal((m) => ({ ...m, rows: m.rows.map((r) => r.id === rowId ? { ...r, image: null } : r) }));
@@ -201,8 +314,20 @@ export default function Products() {
   async function onImagePick(e) {
     const file = e.target.files && e.target.files[0];
     if (!file) return;
-    const dataUrl = await resizeImageFile(file, 640);
-    setModal((m) => ({ ...m, imageDraft: dataUrl || '' }));
+    const dataUrl = await resizeImageFile(file, 1200);
+    setModal((m) => ({ ...m, cropSrc: dataUrl || '' }));
+  }
+  function openPhotoRecrop() {
+    setModal((m) => {
+      const src = m.imageDraft || (editProduct && editProduct.image);
+      return src ? { ...m, cropSrc: src } : m;
+    });
+  }
+  function confirmProductCrop(croppedDataUrl) {
+    setModal((m) => ({ ...m, cropSrc: null, imageDraft: croppedDataUrl }));
+  }
+  function cancelProductCrop() {
+    setModal((m) => ({ ...m, cropSrc: null }));
   }
 
   function submitBatchEdit(e) {
@@ -361,7 +486,10 @@ export default function Products() {
       )}
 
       {modal && modal.type === 'product' && (
-        <Modal title={modal.editId ? 'Edit product' : 'Add product'} onClose={() => setModal(null)}>
+        <Modal title={modal.cropSrc ? 'Position your photo' : (modal.editId ? 'Edit product' : 'Add product')} onClose={() => setModal(null)}>
+          {modal.cropSrc ? (
+            <ImageCropper src={modal.cropSrc} onCancel={cancelProductCrop} onSave={confirmProductCrop} />
+          ) : (
           <form onSubmit={submitProduct} data-form="product">
             <div className="form-field">
               <label>Name</label>
@@ -412,11 +540,14 @@ export default function Products() {
               <label>Photo</label>
               <input type="file" accept="image/*" onChange={onImagePick} />
               {(modal.imageDraft || (editProduct && editProduct.image)) && (
-                <img
-                  src={modal.imageDraft || editProduct.image}
-                  alt=""
-                  style={{ width: 80, height: 80, objectFit: 'cover', borderRadius: 10, marginTop: 8 }}
-                />
+                <div style={{ display: 'flex', alignItems: 'flex-end', gap: 10, marginTop: 8 }}>
+                  <img
+                    src={modal.imageDraft || editProduct.image}
+                    alt=""
+                    style={{ width: 80, height: 80, objectFit: 'cover', borderRadius: 10 }}
+                  />
+                  <button type="button" className="btn btn-ghost" onClick={openPhotoRecrop}>✎ Move / crop photo</button>
+                </div>
               )}
             </div>
             <div className="form-field">
@@ -428,11 +559,13 @@ export default function Products() {
               {modal.editId ? 'Save changes' : 'Add product'}
             </button>
           </form>
+          )}
         </Modal>
       )}
 
       {modal && modal.type === 'bulkAdd' && (
-        <Modal title="Bulk add products" wide onClose={() => setModal(null)}>
+        <Modal title={modal.cropSrc ? 'Position your photo' : 'Bulk add products'} wide onClose={() => setModal(null)}>
+          {!modal.cropSrc && (
           <div className="wizard-steps">
             {[1, 2, 3].map((n, idx) => (
               <React.Fragment key={n}>
@@ -443,6 +576,8 @@ export default function Products() {
               </React.Fragment>
             ))}
           </div>
+          )}
+          {!modal.cropSrc && (
           <div style={{ textAlign: 'center', marginBottom: 18 }}>
             <div className="wizard-kicker">Step {modal.step} of 3</div>
             <div className="wizard-title" style={{ fontSize: 19, marginBottom: 4 }}>
@@ -454,6 +589,7 @@ export default function Products() {
                 : 'Double-check everything before adding these products.'}
             </p>
           </div>
+          )}
 
           {modal.error && <div className="form-error">{modal.error}</div>}
 
@@ -496,6 +632,9 @@ export default function Products() {
           )}
 
           {modal.step === 2 && (
+            modal.cropSrc ? (
+              <ImageCropper src={modal.cropSrc} onCancel={cancelBulkCrop} onSave={confirmBulkCrop} />
+            ) : (
             <div>
               {modal.rows.map((r, i) => (
                 <div className="bulk-item-card" key={r.id}>
@@ -512,6 +651,11 @@ export default function Products() {
                         onChange={(e) => { const f = e.target.files && e.target.files[0]; if (f) bulkSetRowImage(r.id, f); }}
                       />
                     </label>
+                    {r.image && (
+                      <button type="button" className="btn btn-ghost bulk-item-replace" onClick={() => bulkOpenRecrop(r.id, r.image)}>
+                        ✎ Move / crop
+                      </button>
+                    )}
                     {r.image && (
                       <button type="button" className="btn btn-ghost bulk-item-remove" onClick={() => bulkRemoveRowImage(r.id)}>
                         Remove photo
@@ -571,6 +715,7 @@ export default function Products() {
                 ＋ Add another product
               </button>
             </div>
+            )
           )}
 
           {modal.step === 3 && (() => {
@@ -601,6 +746,7 @@ export default function Products() {
             );
           })()}
 
+          {!modal.cropSrc && (
           <div className="modal-actions">
             {modal.step > 1
               ? <button type="button" className="btn btn-ghost" onClick={bulkBack}>← Back</button>
@@ -610,6 +756,7 @@ export default function Products() {
               ? <button type="button" className="btn btn-primary" onClick={bulkNext}>Next →</button>
               : <button type="button" className="btn btn-primary" onClick={bulkSubmit}>Add {modal.rows.filter((r) => r.name.trim()).length} products</button>}
           </div>
+          )}
         </Modal>
       )}
 
