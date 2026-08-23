@@ -8,6 +8,10 @@ function logStock(data, productId, name, delta, resultingStock) {
   data.stockLog.unshift({ id: uid('log'), productId, name, delta, resultingStock, date: new Date().toISOString() });
 }
 
+function emptyBulkRow() {
+  return { id: uid('row'), name: '', sku: '', price: '', cost: '', stock: '', lowStockAt: '', emoji: '', image: null };
+}
+
 export default function Products() {
   const { shop, data, mutate } = useShop();
   const cur = shop.currency || 'PHP';
@@ -53,8 +57,83 @@ export default function Products() {
   }
   function clearSelection() { setSelected([]); }
 
+  function openAddChooser() { setModal({ type: 'addMethod' }); setErrorMsg(''); }
   function openAdd() { setModal({ type: 'product', editId: null }); setErrorMsg(''); }
   function openEdit(id) { setModal({ type: 'product', editId: id }); setErrorMsg(''); }
+
+  function openBulkAdd() {
+    const hasCats = allCategories.length > 0;
+    setModal({
+      type: 'bulkAdd',
+      step: 1,
+      category: hasCats ? allCategories[0] : '',
+      newCategory: '',
+      showNewCategory: !hasCats,
+      rows: [emptyBulkRow()],
+      error: ''
+    });
+  }
+  function bulkNext() {
+    setModal((m) => {
+      if (m.step === 1) {
+        if (m.showNewCategory && !m.newCategory.trim()) return { ...m, error: 'Enter a category name.' };
+        if (!m.showNewCategory && !m.category) return { ...m, error: 'Choose a category.' };
+      }
+      if (m.step === 2) {
+        const invalid = m.rows.some((r) => !r.name.trim());
+        if (invalid || m.rows.length === 0) return { ...m, error: 'Every product needs a name.' };
+      }
+      return { ...m, step: Math.min(3, m.step + 1), error: '' };
+    });
+  }
+  function bulkBack() { setModal((m) => ({ ...m, step: Math.max(1, m.step - 1), error: '' })); }
+  function bulkAddRow() { setModal((m) => ({ ...m, rows: [...m.rows, emptyBulkRow()] })); }
+  function bulkRemoveRow(rowId) {
+    setModal((m) => ({ ...m, rows: m.rows.length > 1 ? m.rows.filter((r) => r.id !== rowId) : m.rows }));
+  }
+  function bulkUpdateRow(rowId, field, value) {
+    setModal((m) => ({ ...m, rows: m.rows.map((r) => r.id === rowId ? { ...r, [field]: value } : r) }));
+  }
+  function bulkMoveRow(index, dir) {
+    setModal((m) => {
+      const rows = m.rows.slice();
+      const to = index + dir;
+      if (to < 0 || to >= rows.length) return m;
+      const [moved] = rows.splice(index, 1);
+      rows.splice(to, 0, moved);
+      return { ...m, rows };
+    });
+  }
+  async function bulkSetRowImage(rowId, file) {
+    const dataUrl = await resizeImageFile(file, 640);
+    setModal((m) => ({ ...m, rows: m.rows.map((r) => r.id === rowId ? { ...r, image: dataUrl || null } : r) }));
+  }
+  function bulkRemoveRowImage(rowId) {
+    setModal((m) => ({ ...m, rows: m.rows.map((r) => r.id === rowId ? { ...r, image: null } : r) }));
+  }
+  function bulkSubmit() {
+    const m = modal;
+    let finalCategory = m.showNewCategory ? m.newCategory.trim() : m.category;
+    if (!finalCategory) finalCategory = 'Other';
+    const validRows = m.rows.filter((r) => r.name.trim());
+    mutate((d) => {
+      if (finalCategory && !CATEGORIES.includes(finalCategory) && !d.customCategories.includes(finalCategory)) {
+        d.customCategories.push(finalCategory);
+      }
+      validRows.forEach((r) => {
+        const newId = uid('prod');
+        const stock = parseInt(r.stock, 10) || 0;
+        const lowStockAt = parseInt(r.lowStockAt, 10) || 0;
+        d.products.push({
+          id: newId, name: r.name.trim(), category: finalCategory, ip: '',
+          price: parseFloat(r.price) || 0, cost: parseFloat(r.cost) || 0,
+          stock, lowStockAt, emoji: r.emoji.trim(), image: r.image || '', archived: false, notes: ''
+        });
+        if (stock > 0) logStock(d, newId, r.name.trim(), stock, stock);
+      });
+    });
+    setModal(null);
+  }
 
   function deleteProduct(id) {
     const p = data.products.find((x) => x.id === id);
@@ -189,7 +268,7 @@ export default function Products() {
           <button className="btn btn-ghost" onClick={() => setModal({ type: 'batch' })} disabled={!selected.length}>
             ✎ Batch edit
           </button>
-          <button className="btn btn-primary" onClick={openAdd}>+ Add product</button>
+          <button className="btn btn-primary" onClick={openAddChooser}>+ Add product</button>
         </div>
       </div>
 
@@ -241,27 +320,10 @@ export default function Products() {
               </div>
               <div className="plist-card-body">
                 <span className="plist-card-name">{p.name}</span>
-                <div className="plist-card-tags">
-                  <span className="plist-cat">{p.category}</span>
-                  {p.ip && <span className="plist-ip">{p.ip}</span>}
-                </div>
-                <div className="plist-card-stats">
-                  <div className="plist-card-stat">
-                    <span className="plist-card-stat-label">Price</span>
-                    <span className="plist-card-stat-value">{money(p.price, cur)}</span>
-                  </div>
-                  <div className="plist-card-stat">
-                    <span className="plist-card-stat-label">Cost</span>
-                    <span className="plist-card-stat-value">{money(p.cost, cur)}</span>
-                  </div>
-                  <div className="plist-card-stat">
-                    <span className="plist-card-stat-label">Stock</span>
-                    <span className={'plist-card-stat-value ' + (p.stock <= 0 ? 'danger' : (p.stock <= p.lowStockAt ? 'warn' : ''))}>{p.stock}</span>
-                  </div>
-                  <div className="plist-card-stat">
-                    <span className="plist-card-stat-label">Low at</span>
-                    <span className="plist-card-stat-value">{p.lowStockAt}</span>
-                  </div>
+                <div className="mono" style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 10 }}>
+                  {money(p.price, cur)} · <span style={{ color: p.stock <= 0 ? 'var(--red)' : (p.stock <= p.lowStockAt ? 'var(--amber)' : 'var(--muted)') }}>
+                    {p.stock <= 0 ? 'Out of stock' : `${p.stock} left`}
+                  </span>
                 </div>
                 <div className="plist-card-actions">
                   <button className="btn btn-ghost" title="Edit" onClick={() => openEdit(p.id)}>✎ Edit</button>
@@ -272,6 +334,30 @@ export default function Products() {
             </div>
           ))}
         </div>
+      )}
+
+      {modal && modal.type === 'addMethod' && (
+        <Modal title="Add products" onClose={() => setModal(null)}>
+          <div className="method-lead">
+            <div className="kicker">Get started</div>
+            <h2>How would you like to add products?</h2>
+            <p>Add one product with full detail, or add a whole batch at once.</p>
+          </div>
+          <div className="method-grid">
+            <button type="button" className="method-card" style={{ cursor: 'pointer', width: '100%', font: 'inherit' }} onClick={openAdd}>
+              <div className="method-icon">➕</div>
+              <h3>Single product</h3>
+              <p>Fill in one product's full details — name, category, price, stock, and photo.</p>
+              <span className="method-arrow">→</span>
+            </button>
+            <button type="button" className="method-card dark" style={{ cursor: 'pointer', width: '100%', font: 'inherit' }} onClick={openBulkAdd}>
+              <div className="method-icon">🗂</div>
+              <h3>Bulk add</h3>
+              <p>Add many products at once with a shared category, then review before saving.</p>
+              <span className="method-arrow">→</span>
+            </button>
+          </div>
+        </Modal>
       )}
 
       {modal && modal.type === 'product' && (
@@ -342,6 +428,188 @@ export default function Products() {
               {modal.editId ? 'Save changes' : 'Add product'}
             </button>
           </form>
+        </Modal>
+      )}
+
+      {modal && modal.type === 'bulkAdd' && (
+        <Modal title="Bulk add products" wide onClose={() => setModal(null)}>
+          <div className="wizard-steps">
+            {[1, 2, 3].map((n, idx) => (
+              <React.Fragment key={n}>
+                <div className={'wizard-step-dot ' + (modal.step === n ? 'active' : (modal.step > n ? 'done' : ''))}>
+                  {modal.step > n ? '✓' : n}
+                </div>
+                {idx < 2 && <div className="wizard-step-line" />}
+              </React.Fragment>
+            ))}
+          </div>
+          <div style={{ textAlign: 'center', marginBottom: 18 }}>
+            <div className="wizard-kicker">Step {modal.step} of 3</div>
+            <div className="wizard-title" style={{ fontSize: 19, marginBottom: 4 }}>
+              {modal.step === 1 ? 'Choose a category' : modal.step === 2 ? 'Add your products' : 'Review & confirm'}
+            </div>
+            <p className="wizard-sub" style={{ marginBottom: 0 }}>
+              {modal.step === 1 ? 'Every product in this batch will share one category.'
+                : modal.step === 2 ? 'Add one row per product — photo, price, and stock included.'
+                : 'Double-check everything before adding these products.'}
+            </p>
+          </div>
+
+          {modal.error && <div className="form-error">{modal.error}</div>}
+
+          {modal.step === 1 && (
+            <div>
+              <div className="form-field">
+                <label>Category</label>
+                <select
+                  value={modal.category}
+                  disabled={modal.showNewCategory}
+                  onChange={(e) => setModal({ ...modal, category: e.target.value })}
+                >
+                  {allCategories.map((c) => <option key={c} value={c}>{c}</option>)}
+                </select>
+                <button
+                  type="button"
+                  className="link-btn"
+                  style={{ marginTop: 4, textAlign: 'left' }}
+                  onClick={() => setModal({
+                    ...modal,
+                    showNewCategory: !modal.showNewCategory,
+                    category: !modal.showNewCategory ? '' : (allCategories[0] || '')
+                  })}
+                >
+                  {modal.showNewCategory ? '← Choose existing category' : '+ Add new category'}
+                </button>
+              </div>
+              {modal.showNewCategory && (
+                <div className="form-field">
+                  <label>New category name</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Magnets"
+                    value={modal.newCategory}
+                    onChange={(e) => setModal({ ...modal, newCategory: e.target.value })}
+                  />
+                </div>
+              )}
+            </div>
+          )}
+
+          {modal.step === 2 && (
+            <div>
+              {modal.rows.map((r, i) => (
+                <div className="bulk-item-card" key={r.id}>
+                  <div className="bulk-item-media">
+                    <div className="bim-box">
+                      {r.image ? <img src={r.image} alt="" /> : (r.emoji || <span style={{ fontSize: 10, color: 'var(--muted)' }}>No photo</span>)}
+                    </div>
+                    <label className="btn btn-ghost bulk-item-replace" style={{ cursor: 'pointer', display: 'block', textAlign: 'center' }}>
+                      📷 {r.image ? 'Replace' : 'Upload'}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        style={{ display: 'none' }}
+                        onChange={(e) => { const f = e.target.files && e.target.files[0]; if (f) bulkSetRowImage(r.id, f); }}
+                      />
+                    </label>
+                    {r.image && (
+                      <button type="button" className="btn btn-ghost bulk-item-remove" onClick={() => bulkRemoveRowImage(r.id)}>
+                        Remove photo
+                      </button>
+                    )}
+                  </div>
+                  <div className="bulk-item-fields">
+                    <div className="ff-full">
+                      <label>Product name</label>
+                      <input type="text" placeholder="Product name" value={r.name} onChange={(e) => bulkUpdateRow(r.id, 'name', e.target.value)} />
+                    </div>
+                    <div>
+                      <label>SKU (optional)</label>
+                      <input type="text" value={r.sku} onChange={(e) => bulkUpdateRow(r.id, 'sku', e.target.value)} />
+                    </div>
+                    <div>
+                      <label>Emoji (if no photo)</label>
+                      <input type="text" placeholder="🩷" value={r.emoji} onChange={(e) => bulkUpdateRow(r.id, 'emoji', e.target.value)} />
+                    </div>
+                    <div>
+                      <label>Price ({cur})</label>
+                      <input type="number" min="0" step="0.01" value={r.price} onChange={(e) => bulkUpdateRow(r.id, 'price', e.target.value)} />
+                    </div>
+                    <div>
+                      <label>Cost ({cur})</label>
+                      <input type="number" min="0" step="0.01" value={r.cost} onChange={(e) => bulkUpdateRow(r.id, 'cost', e.target.value)} />
+                    </div>
+                    <div>
+                      <label>Stock qty</label>
+                      <input type="number" min="0" step="1" value={r.stock} onChange={(e) => bulkUpdateRow(r.id, 'stock', e.target.value)} />
+                    </div>
+                    <div>
+                      <label>Low-stock alert at</label>
+                      <input type="number" min="0" step="1" value={r.lowStockAt} onChange={(e) => bulkUpdateRow(r.id, 'lowStockAt', e.target.value)} />
+                    </div>
+                    <div className="ff-full" style={{ display: 'flex', gap: 6, justifyContent: 'flex-end', alignItems: 'center' }}>
+                      <button type="button" className="icon-btn" title="Move up" disabled={i === 0} onClick={() => bulkMoveRow(i, -1)}>↑</button>
+                      <button type="button" className="icon-btn" title="Move down" disabled={i === modal.rows.length - 1} onClick={() => bulkMoveRow(i, 1)}>↓</button>
+                      <button
+                        type="button"
+                        className="btn btn-ghost"
+                        style={{ color: 'var(--red)' }}
+                        disabled={modal.rows.length <= 1}
+                        onClick={() => bulkRemoveRow(r.id)}
+                      >
+                        🗑 Remove row
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+              <button
+                type="button"
+                onClick={bulkAddRow}
+                style={{ width: '100%', border: '1px dashed var(--accent)', background: 'var(--accent-softer)', color: 'var(--accent-dark)', borderRadius: 12, padding: 12, fontWeight: 800, fontSize: 13.5 }}
+              >
+                ＋ Add another product
+              </button>
+            </div>
+          )}
+
+          {modal.step === 3 && (() => {
+            const finalCategory = modal.showNewCategory ? (modal.newCategory.trim() || '(new category)') : modal.category;
+            const valid = modal.rows.filter((r) => r.name.trim());
+            return (
+              <div>
+                <p className="hint" style={{ marginBottom: 10 }}>Category: <b>{finalCategory}</b></p>
+                <div style={{ border: '1px solid var(--border)', borderRadius: 12, overflow: 'hidden' }}>
+                  {valid.map((r, i) => (
+                    <div
+                      key={r.id}
+                      style={{
+                        display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', fontSize: 13,
+                        borderBottom: i < valid.length - 1 ? '1px solid var(--border)' : 'none'
+                      }}
+                    >
+                      {r.image
+                        ? <img src={r.image} alt="" style={{ width: 32, height: 32, borderRadius: 7, objectFit: 'cover', flex: 'none' }} />
+                        : <div style={{ width: 32, height: 32, borderRadius: 7, background: 'var(--accent-softer)', flex: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14 }}>{r.emoji || '🩷'}</div>}
+                      <div style={{ fontWeight: 700, flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.name}</div>
+                      <div className="mono" style={{ color: 'var(--muted)', fontSize: 12 }}>{money(parseFloat(r.price) || 0, cur)} · stock {parseInt(r.stock, 10) || 0}</div>
+                    </div>
+                  ))}
+                </div>
+                <p className="hint small" style={{ marginTop: 10 }}>{valid.length} product{valid.length === 1 ? '' : 's'} will be added.</p>
+              </div>
+            );
+          })()}
+
+          <div className="modal-actions">
+            {modal.step > 1
+              ? <button type="button" className="btn btn-ghost" onClick={bulkBack}>← Back</button>
+              : <button type="button" className="btn btn-ghost" onClick={() => setModal(null)}>Cancel</button>}
+            <div style={{ flex: 1 }} />
+            {modal.step < 3
+              ? <button type="button" className="btn btn-primary" onClick={bulkNext}>Next →</button>
+              : <button type="button" className="btn btn-primary" onClick={bulkSubmit}>Add {modal.rows.filter((r) => r.name.trim()).length} products</button>}
+          </div>
         </Modal>
       )}
 
