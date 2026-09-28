@@ -189,7 +189,7 @@ export default function Storefront({ slug }) {
           {filtered.map((p) => (
             <button key={p.shopSlug + p.id} className="store-card" onClick={() => openProduct(p)}>
               <div className="store-media">
-                {p.image ? <img src={p.image} alt={p.name} loading="lazy" /> : <span>{p.emoji || <Icon name="image" size={40} />}</span>}
+                {p.image ? <img src={p.image} alt={p.name} loading="lazy" /> : <Icon name="image" size={40} />}
                 {p.stock <= 3 && <span className="store-badge">Only {p.stock} left</span>}
               </div>
               <div className="store-info">
@@ -205,7 +205,7 @@ export default function Storefront({ slug }) {
       {open && (
         <Modal title={open.name} onClose={() => setOpen(null)}>
           <div className="store-detail-media">
-            {open.image ? <img src={open.image} alt={open.name} /> : <span>{open.emoji || <Icon name="image" size={64} />}</span>}
+            {open.image ? <img src={open.image} alt={open.name} /> : <Icon name="image" size={64} />}
           </div>
           <div className="store-price mono" style={{ fontSize: 22, margin: '12px 0 4px' }}>{money(open.price, open.currency)}</div>
           <p className="hint" style={{ margin: '0 0 14px' }}>
@@ -241,7 +241,7 @@ export default function Storefront({ slug }) {
                   <div className="cart-shop">{g.shopName}</div>
                   {g.lines.map((l) => (
                     <div className="cart-line" key={l.productId}>
-                      <div className="cart-emoji">{l.emoji || <Icon name="image" size={18} />}</div>
+                      <div className="cart-thumb"><Icon name="image" size={18} /></div>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div className="store-name">{l.name}</div>
                         <div className="store-price mono">{money(l.price, g.currency)}</div>

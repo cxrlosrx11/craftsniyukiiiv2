@@ -56,7 +56,7 @@ export default function ImportTab({ goTo }) {
           id: uid('prod'), name, category, ip: r.ip || '', price,
           cost: parseFloat(r.cost) || 0, stock: parseInt(r.stock, 10) || 0,
           lowStockAt: parseInt(r.lowstockat || r.low_stock_at, 10) || 0,
-          emoji: r.emoji || '', image: '', archived: false, notes: r.notes || ''
+          image: '', archived: false, notes: r.notes || ''
         });
         imported++;
       });
@@ -74,7 +74,7 @@ export default function ImportTab({ goTo }) {
       <div className="panel">
         <div className="panel-head"><div className="panel-title">CSV format</div></div>
         <p className="hint">
-          Columns: name, category, ip, price, cost, stock, lowStockAt, emoji, notes.
+          Columns: name, category, ip, price, cost, stock, lowStockAt, notes.
           Only "name" and "price" are required — the rest are optional.
         </p>
         <input type="file" accept=".csv,text/csv" onChange={onFile} />

@@ -10,7 +10,7 @@ function logStock(data, productId, name, delta, resultingStock) {
 }
 
 function emptyBulkRow() {
-  return { id: uid('row'), name: '', sku: '', price: '', cost: '', stock: '', lowStockAt: '', emoji: '', image: null };
+  return { id: uid('row'), name: '', sku: '', price: '', cost: '', stock: '', lowStockAt: '', image: null };
 }
 
 function ImageCropper({ src, onCancel, onSave }) {
@@ -241,7 +241,7 @@ export default function Products() {
         d.products.push({
           id: newId, name: r.name.trim(), category: finalCategory, ip: '',
           price: parseFloat(r.price) || 0, cost: parseFloat(r.cost) || 0,
-          stock, lowStockAt, emoji: r.emoji.trim(), image: r.image || '', archived: false, notes: ''
+          stock, lowStockAt, image: r.image || '', archived: false, notes: ''
         });
         if (stock > 0) logStock(d, newId, r.name.trim(), stock, stock);
       });
@@ -281,7 +281,6 @@ export default function Products() {
     const stock = parseInt(fd.get('stock'), 10) || 0;
     let lowStockAt = parseInt(fd.get('lowStockAt'), 10);
     if (isNaN(lowStockAt)) lowStockAt = 0;
-    const emoji = (fd.get('emoji') || '').trim();
     const name = (fd.get('name') || '').trim();
     const notes = (fd.get('notes') || '').trim();
     if (!name || isNaN(price) || price < 0) { setErrorMsg('Enter a valid name and price.'); return; }
@@ -297,13 +296,13 @@ export default function Products() {
         const p = d.products.find((x) => x.id === editId);
         if (p) {
           const nextImage = newImage !== null && newImage !== undefined ? newImage : p.image;
-          Object.assign(p, { name, category: categoryVal, ip: ipVal, price, cost, stock, lowStockAt, emoji, notes, image: nextImage });
+          Object.assign(p, { name, category: categoryVal, ip: ipVal, price, cost, stock, lowStockAt, notes, image: nextImage });
         }
       } else {
         const newId = uid('prod');
         d.products.push({
           id: newId, name, category: categoryVal, ip: ipVal, price, cost, stock, lowStockAt,
-          emoji, image: newImage || '', archived: false, notes
+          image: newImage || '', archived: false, notes
         });
         if (stock > 0) logStock(d, newId, name, stock, stock);
       }
@@ -370,7 +369,7 @@ export default function Products() {
       const newId = uid('prod');
       d.products.push({
         id: newId, name, category: catVal, ip: ipVal, price, cost, stock,
-        lowStockAt: 0, emoji: '📦', image: '', archived: false, notes: '', bundleOf: selected.slice()
+        lowStockAt: 0, image: '', archived: false, notes: '', bundleOf: selected.slice()
       });
       if (stock > 0) logStock(d, newId, name, stock, stock);
     });
@@ -441,7 +440,7 @@ export default function Products() {
                 <div className="plist-card-checkwrap">
                   <input type="checkbox" checked={selected.includes(p.id)} onChange={() => toggleSelect(p.id)} />
                 </div>
-                {p.image ? <img src={p.image} alt={p.name} /> : (p.emoji || <Icon name="image" size={22} />)}
+                {p.image ? <img src={p.image} alt={p.name} /> : <Icon name="image" size={22} />}
                 {p.archived && <span className="plist-badge archived-badge" style={{ position: 'absolute', top: 9, right: 9 }}>Archived</span>}
               </div>
               <div className="plist-card-body">
@@ -532,10 +531,6 @@ export default function Products() {
                 <label>Low-stock alert at</label>
                 <input name="lowStockAt" type="number" min="0" defaultValue={editProduct ? editProduct.lowStockAt : 0} />
               </div>
-            </div>
-            <div className="form-field">
-              <label>Emoji (shown if no photo)</label>
-              <input name="emoji" defaultValue={editProduct ? editProduct.emoji : ''} placeholder="🩷" />
             </div>
             <div className="form-field">
               <label>Photo</label>
@@ -641,7 +636,7 @@ export default function Products() {
                 <div className="bulk-item-card" key={r.id}>
                   <div className="bulk-item-media">
                     <div className="bim-box">
-                      {r.image ? <img src={r.image} alt="" /> : (r.emoji || <span style={{ fontSize: 10, color: 'var(--muted)' }}>No photo</span>)}
+                      {r.image ? <img src={r.image} alt="" /> : <span style={{ fontSize: 10, color: 'var(--muted)' }}>No photo</span>}
                     </div>
                     <label className="btn btn-ghost bulk-item-replace" style={{ cursor: 'pointer', display: 'block', textAlign: 'center' }}>
                       <Icon name="camera" size={14} /> {r.image ? 'Replace' : 'Upload'}
@@ -671,10 +666,6 @@ export default function Products() {
                     <div>
                       <label>SKU (optional)</label>
                       <input type="text" value={r.sku} onChange={(e) => bulkUpdateRow(r.id, 'sku', e.target.value)} />
-                    </div>
-                    <div>
-                      <label>Emoji (if no photo)</label>
-                      <input type="text" placeholder="🩷" value={r.emoji} onChange={(e) => bulkUpdateRow(r.id, 'emoji', e.target.value)} />
                     </div>
                     <div>
                       <label>Price ({cur})</label>
@@ -736,7 +727,7 @@ export default function Products() {
                     >
                       {r.image
                         ? <img src={r.image} alt="" style={{ width: 32, height: 32, borderRadius: 7, objectFit: 'cover', flex: 'none' }} />
-                        : <div style={{ width: 32, height: 32, borderRadius: 7, background: 'var(--accent-softer)', flex: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14 }}>{r.emoji || <Icon name="image" size={14} />}</div>}
+                        : <div style={{ width: 32, height: 32, borderRadius: 7, background: 'var(--accent-softer)', flex: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14 }}><Icon name="image" size={14} /></div>}
                       <div style={{ fontWeight: 700, flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.name}</div>
                       <div className="mono" style={{ color: 'var(--muted)', fontSize: 12 }}>{money(parseFloat(r.price) || 0, cur)} · stock {parseInt(r.stock, 10) || 0}</div>
                     </div>

@@ -44,7 +44,7 @@ export default function Showcase() {
             {liveProducts.map((p) => (
               <div className="thumb-card" key={p.id}>
                 <div className="thumb-media">
-                  {p.image ? <img src={p.image} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : (p.emoji || <Icon name="image" size={22} />)}
+                  {p.image ? <img src={p.image} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <Icon name="image" size={22} />}
                 </div>
                 <div className="thumb-body">
                   <div className="thumb-name">{p.name}</div>

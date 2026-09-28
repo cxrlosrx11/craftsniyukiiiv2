@@ -161,7 +161,7 @@ export default function Pos() {
                 onClick={() => addToCart(p)}
               >
                 <div style={{ height: 70, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, background: 'var(--accent-softer)', borderRadius: 8, marginBottom: 6, overflow: 'hidden' }}>
-                  {p.image ? <img src={p.image} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : (p.emoji || <Icon name="image" size={22} />)}
+                  {p.image ? <img src={p.image} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <Icon name="image" size={22} />}
                 </div>
                 <div style={{ fontSize: 12.5, fontWeight: 700 }}>{p.name}</div>
                 <div className="mono" style={{ fontSize: 12, color: 'var(--muted)' }}>{money(p.price, cur)} · {p.stock} left</div>
