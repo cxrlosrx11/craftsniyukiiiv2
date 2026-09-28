@@ -15,27 +15,36 @@ import ImportTab from './components/ImportTab.jsx';
 import BackupTab from './components/BackupTab.jsx';
 import Pos from './components/Pos.jsx';
 import Storefront from './components/Storefront.jsx';
+import Orders from './components/Orders.jsx';
+import BuyerOrders from './components/BuyerOrders.jsx';
 import { useRoute, navigate } from './lib/router.js';
 
 export default function App() {
-  const { booting, shop, loadError, retryLoad } = useShop();
+  const { booting, shop, buyer, loadError, retryLoad } = useShop();
   const [sellerTab, setSellerTab] = useState('overview');
   const [navOpen, setNavOpen] = useState(typeof window === 'undefined' || window.innerWidth > 920);
   const route = useRoute();
 
   // Once signed in, leave the login screen for the dashboard.
   useEffect(() => {
-    if (!booting && shop && route.name === 'login') navigate('/dashboard');
-  }, [booting, shop, route.name]);
+    if (booting || route.name !== 'login') return;
+    if (shop) navigate('/dashboard');
+    else if (buyer) navigate('/');
+  }, [booting, shop, buyer, route.name]);
 
   if (booting) {
     return <div className="loading-screen">Loading Crafts ni Yukiii…</div>;
   }
 
   // Public pages: the shop is the landing page.
+  if (route.name === 'orders') {
+    if (buyer) return <BuyerOrders />;
+    if (!shop) return <Auth />;
+  }
   if (route.name === 'home') return <Storefront />;
   if (route.name === 'shop') return <Storefront slug={route.slug} />;
-  if (route.name === 'login' && !shop) return <Auth />;
+  if (route.name === 'login' && !shop && !buyer) return <Auth />;
+  if (buyer) return <Storefront />; // buyers have no dashboard
 
   if (loadError) {
     return (
@@ -68,6 +77,7 @@ export default function App() {
     case 'import': content = <ImportTab goTo={setSellerTab} />; break;
     case 'backup': content = <BackupTab />; break;
     case 'pos': content = <Pos goTo={setSellerTab} />; break;
+    case 'orders': content = <Orders />; break;
     default: content = <Overview goTo={setSellerTab} />;
   }
 
