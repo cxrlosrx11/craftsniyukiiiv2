@@ -114,6 +114,10 @@ export function ShopProvider({ children }) {
       options: { data: { role: 'buyer', full_name: fullName.trim(), phone: phone.trim() } }
     });
     if (res.error) throw { friendly: res.error.message || 'Could not create your account.' };
+    // Supabase hides "already registered" behind a fake user with no identities.
+    if (res.data.user && Array.isArray(res.data.user.identities) && res.data.user.identities.length === 0) {
+      throw { friendly: 'That email is already registered (buyer and seller accounts cannot share one email). Log in instead, or use a different email.' };
+    }
     if (!res.data.user || !res.data.session) {
       throw { isNotice: true, friendly: 'Check your email to confirm your account, then log in.' };
     }
@@ -128,6 +132,9 @@ export function ShopProvider({ children }) {
     }
     const signUpRes = await sb.auth.signUp({ email, password });
     if (signUpRes.error) throw { friendly: signUpRes.error.message || 'Could not create your account.' };
+    if (signUpRes.data.user && Array.isArray(signUpRes.data.user.identities) && signUpRes.data.user.identities.length === 0) {
+      throw { friendly: 'That email is already registered (buyer and seller accounts cannot share one email). Log in instead, or use a different email.' };
+    }
     const userId = signUpRes.data.user && signUpRes.data.user.id;
     if (!userId) {
       throw { isNotice: true, friendly: 'Check your email to confirm your account, then log in.' };
