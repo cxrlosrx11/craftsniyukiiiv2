@@ -23,7 +23,7 @@ export function useCart() {
       return [...prev, {
         shopSlug: p.shopSlug, shopName: p.shopName, currency: p.currency,
         productId: p.id, name: p.name, price: p.price, stock: p.stock,
-        emoji: p.emoji || '', category: p.category || '', qty: Math.min(p.stock, qty)
+        category: p.category || '', qty: Math.min(p.stock, qty)
       }];
     });
   }, []);

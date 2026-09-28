@@ -1,10 +1,5 @@
 export const CATEGORIES = ['Pins', 'Prints', 'Charms', 'Stickers', 'Standees', 'Sets', 'Apparel', 'Other'];
 
-export const CATEGORY_EMOJI = {
-  Pins: '📌', Prints: '🖼️', Charms: '🌸', Stickers: '✨',
-  Standees: '🌟', Sets: '🎁', Apparel: '👜', Other: '🩷'
-};
-
 export const CURRENCIES = {
   PHP: { symbol: '₱', label: 'Philippine Peso' },
   USD: { symbol: '$', label: 'US Dollar' },
