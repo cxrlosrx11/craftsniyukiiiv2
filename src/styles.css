@@ -601,3 +601,12 @@
   .order-badge.confirmed{background:#E9F8F1;color:var(--green);}
   .order-badge.declined,.order-badge.cancelled{background:#FDEAEA;color:var(--red);}
   .nav-badge{margin-left:auto;background:var(--accent);color:#fff;border-radius:999px;font-size:11px;font-weight:700;padding:1px 8px;}
+
+  /* ---------- ICONS (Hugeicons) ---------- */
+  .hi{vertical-align:-0.2em;flex:none;}
+  .hi.star-on{color:var(--amber);}
+  .hi.ok-icon{color:var(--green);}
+  .side-link .ic{display:inline-flex;align-items:center;justify-content:center;}
+  .pos-search-wrap .si{display:flex;align-items:center;}
+  .store-media .hi,.thumb-media .hi,.cart-emoji .hi,.store-detail-media .hi{color:var(--accent);opacity:.55;vertical-align:baseline;}
+  .icon-btn .hi,.nav-collapse-btn .hi,.pos-cart-remove .hi{vertical-align:middle;}

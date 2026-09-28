@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import Icon from './components/Icon.jsx';
 import { useShop } from './lib/ShopContext.jsx';
 import Auth from './components/Auth.jsx';
 import Sidebar from './components/Sidebar.jsx';
@@ -86,7 +87,7 @@ export default function App() {
   return (
     <div id="app">
       {!navOpen && (
-        <button className="nav-fab" title="Show menu" onClick={() => setNavOpen(true)}>☰</button>
+        <button className="nav-fab" title="Show menu" onClick={() => setNavOpen(true)}><Icon name="menu" size={20} /></button>
       )}
       <div className={shellClass}>
         <Sidebar sellerTab={sellerTab} setSellerTab={setSellerTab} navOpen={navOpen} setNavOpen={setNavOpen} />
