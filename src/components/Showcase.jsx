@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useShop } from '../lib/ShopContext.jsx';
+import { shopLink } from '../lib/router.js';
 import { money } from '../lib/utils.js';
 
 export default function Showcase() {
@@ -8,7 +9,7 @@ export default function Showcase() {
   const [copied, setCopied] = useState(false);
 
   const slug = shop.showcaseSlug || shop.username;
-  const link = `${window.location.origin}/shop/${slug}`;
+  const link = shopLink(slug);
   const liveProducts = data.products.filter((p) => !p.archived && p.stock > 0);
 
   function copyLink() {

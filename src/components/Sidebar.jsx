@@ -1,5 +1,6 @@
 import React from 'react';
 import { useShop } from '../lib/ShopContext.jsx';
+import { navigate } from '../lib/router.js';
 
 const NAV_SECTIONS = [
   {
@@ -81,7 +82,8 @@ export default function Sidebar({ sellerTab, setSellerTab, navOpen, setNavOpen }
           <div className="profile-sub">@{shop.username}</div>
         </div>
       </div>
-      <button className="signout-btn" onClick={logout}>⎋ Log out</button>
+      <button className="signout-btn" onClick={() => navigate('/')}>🛍️ View shop</button>
+      <button className="signout-btn" onClick={async () => { await logout(); navigate('/'); }}>⎋ Log out</button>
     </div>
   );
 }

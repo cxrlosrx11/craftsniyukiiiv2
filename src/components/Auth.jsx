@@ -58,6 +58,7 @@ export default function Auth() {
   return (
     <div className="auth-shell">
       <div className="auth-card">
+        <a className="link-btn auth-back" href="#/">← Back to shop</a>
         <div className="auth-brand">
           <div className="auth-logo">CY</div>
           <div className="auth-brand-text">Crafts ni Yukiii</div>
