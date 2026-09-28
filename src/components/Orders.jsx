@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import Icon from './Icon.jsx';
 import { sb } from '../lib/supabaseClient';
 import { useShop } from '../lib/ShopContext.jsx';
 import { fmtDateTime, money, uid } from '../lib/utils.js';
@@ -76,7 +77,7 @@ export default function Orders() {
     <div>
       <div className="page-head">
         <div><h1>Online orders</h1><p>{pending} waiting for you. Confirm an order to record the sale and deduct stock.</p></div>
-        <button className="btn btn-ghost" onClick={load}>↻ Refresh</button>
+        <button className="btn btn-ghost" onClick={load}><Icon name="refresh" size={16} /> Refresh</button>
       </div>
       <div className="chips">
         {['Pending', 'Confirmed', 'Declined', 'Cancelled', 'All'].map((f) => (
@@ -93,16 +94,16 @@ export default function Orders() {
             <div className="panel-title">{o.buyer_name}</div>
             <span className={'order-badge ' + o.status.toLowerCase()}>{o.status}</span>
           </div>
-          <div className="hint small">{fmtDateTime(o.created_at)} · 📞 {o.buyer_phone} · Pay via {o.payment_method}</div>
-          <div className="hint small">📍 {o.buyer_address}</div>
-          {o.note && <div className="hint small">📝 {o.note}</div>}
+          <div className="hint small">{fmtDateTime(o.created_at)} · <Icon name="phone" size={13} /> {o.buyer_phone} · Pay via {o.payment_method}</div>
+          <div className="hint small"><Icon name="pin" size={13} /> {o.buyer_address}</div>
+          {o.note && <div className="hint small"><Icon name="note" size={13} /> {o.note}</div>}
           <ul className="order-items">
             {o.items.map((it, i) => <li key={i}>{it.name} × {it.qty} <span className="mono">{money(it.price * it.qty, cur)}</span></li>)}
           </ul>
           <div className="cart-sub"><span>Total</span><b className="mono">{money(o.total, cur)}</b></div>
           {o.status === 'Pending' && (
             <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
-              <button className="btn btn-primary btn-sm" disabled={busyId === o.id} onClick={() => confirmOrder(o)}>✓ Confirm &amp; record sale</button>
+              <button className="btn btn-primary btn-sm" disabled={busyId === o.id} onClick={() => confirmOrder(o)}><Icon name="check" size={15} /> Confirm &amp; record sale</button>
               <button className="btn btn-ghost btn-sm" disabled={busyId === o.id} onClick={() => declineOrder(o)}>Decline</button>
             </div>
           )}

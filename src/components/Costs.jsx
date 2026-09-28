@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import Icon from './Icon.jsx';
 import { useShop } from '../lib/ShopContext.jsx';
 import Modal from './Modal.jsx';
 import { money, uid, toPHP, fromPHP } from '../lib/utils.js';
@@ -77,8 +78,8 @@ export default function Costs() {
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <span className="mono" style={{ fontWeight: 700 }}>{money(c.amount, c.currency || cur)}</span>
               <div className="plist-actions">
-                <button className="icon-btn" onClick={() => openEdit(c.id)}>✎</button>
-                <button className="icon-btn" onClick={() => deleteCost(c.id)}>🗑</button>
+                <button className="icon-btn" title="Edit" onClick={() => openEdit(c.id)}><Icon name="edit" size={15} /></button>
+                <button className="icon-btn" title="Delete" onClick={() => deleteCost(c.id)}><Icon name="trash" size={15} /></button>
               </div>
             </div>
           </div>

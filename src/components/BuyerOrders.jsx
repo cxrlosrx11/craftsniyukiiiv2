@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import Icon from './Icon.jsx';
 import { sb } from '../lib/supabaseClient';
 import { useShop } from '../lib/ShopContext.jsx';
 import { navigate } from '../lib/router.js';
@@ -35,7 +36,7 @@ export default function BuyerOrders() {
           <span className="brand-text">Crafts ni Yukiii</span>
         </a>
         <div className="store-nav-actions">
-          <button className="btn btn-ghost btn-sm" onClick={() => navigate('/')}>← Back to shop</button>
+          <button className="btn btn-ghost btn-sm" onClick={() => navigate('/')}><Icon name="back" size={14} /> Back to shop</button>
           <button className="btn btn-ghost btn-sm" onClick={async () => { await logout(); navigate('/'); }}>Log out</button>
         </div>
       </header>

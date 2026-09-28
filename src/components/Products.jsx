@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import Icon from './Icon.jsx';
 import { useShop } from '../lib/ShopContext.jsx';
 import Modal from './Modal.jsx';
 import { money, uid, resizeImageFile } from '../lib/utils.js';
@@ -98,9 +99,9 @@ function ImageCropper({ src, onCancel, onSave }) {
         />
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 12 }}>
-        <span style={{ fontSize: 13 }}>🔍</span>
+        <Icon name="search" size={14} />
         <input type="range" min="1" max="3" step="0.01" value={zoom} onChange={(e) => setZoom(parseFloat(e.target.value))} style={{ flex: 1 }} />
-        <span style={{ fontSize: 15 }}>🔍</span>
+        <Icon name="search" size={18} />
       </div>
       <p className="hint small" style={{ textAlign: 'center', marginTop: 6 }}>Drag the photo to reposition it, use the slider to zoom.</p>
       <div className="modal-actions">
@@ -388,10 +389,10 @@ export default function Products() {
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
           <button className="btn btn-ghost" onClick={() => setModal({ type: 'bundle' })} disabled={!selected.length}>
-            📦 Bundle selected
+            <Icon name="gift" size={15} /> Bundle selected
           </button>
           <button className="btn btn-ghost" onClick={() => setModal({ type: 'batch' })} disabled={!selected.length}>
-            ✎ Batch edit
+            <Icon name="edit" size={15} /> Batch edit
           </button>
           <button className="btn btn-primary" onClick={openAddChooser}>+ Add product</button>
         </div>
@@ -423,7 +424,7 @@ export default function Products() {
           <option value="out">Out of stock</option>
         </select>
         {selected.length > 0 && (
-          <button className="cat-filter-clear" onClick={clearSelection}>✕ Clear {selected.length} selected</button>
+          <button className="cat-filter-clear" onClick={clearSelection}><Icon name="close" size={13} /> Clear {selected.length} selected</button>
         )}
         {selected.length === 0 && filtered.length > 0 && (
           <button className="cat-filter-clear" onClick={selectAllOnPage}>Select all shown</button>
@@ -440,7 +441,7 @@ export default function Products() {
                 <div className="plist-card-checkwrap">
                   <input type="checkbox" checked={selected.includes(p.id)} onChange={() => toggleSelect(p.id)} />
                 </div>
-                {p.image ? <img src={p.image} alt={p.name} /> : (p.emoji || '🩷')}
+                {p.image ? <img src={p.image} alt={p.name} /> : (p.emoji || <Icon name="image" size={22} />)}
                 {p.archived && <span className="plist-badge archived-badge" style={{ position: 'absolute', top: 9, right: 9 }}>Archived</span>}
               </div>
               <div className="plist-card-body">
@@ -451,9 +452,9 @@ export default function Products() {
                   </span>
                 </div>
                 <div className="plist-card-actions">
-                  <button className="btn btn-ghost" title="Edit" onClick={() => openEdit(p.id)}>✎ Edit</button>
-                  <button className="btn btn-ghost" title={p.archived ? 'Unarchive' : 'Archive'} onClick={() => toggleArchive(p.id)}>🗄</button>
-                  <button className="btn btn-ghost" title="Delete" onClick={() => deleteProduct(p.id)}>🗑</button>
+                  <button className="btn btn-ghost" title="Edit" onClick={() => openEdit(p.id)}><Icon name="edit" size={15} /> Edit</button>
+                  <button className="btn btn-ghost" title={p.archived ? 'Unarchive' : 'Archive'} onClick={() => toggleArchive(p.id)}><Icon name="archive" size={16} /></button>
+                  <button className="btn btn-ghost" title="Delete" onClick={() => deleteProduct(p.id)}><Icon name="trash" size={16} /></button>
                 </div>
               </div>
             </div>
@@ -470,16 +471,16 @@ export default function Products() {
           </div>
           <div className="method-grid">
             <button type="button" className="method-card" style={{ cursor: 'pointer', width: '100%', font: 'inherit' }} onClick={openAdd}>
-              <div className="method-icon">➕</div>
+              <div className="method-icon"><Icon name="add" size={24} /></div>
               <h3>Single product</h3>
               <p>Fill in one product's full details — name, category, price, stock, and photo.</p>
-              <span className="method-arrow">→</span>
+              <span className="method-arrow"><Icon name="forward" size={20} /></span>
             </button>
             <button type="button" className="method-card dark" style={{ cursor: 'pointer', width: '100%', font: 'inherit' }} onClick={openBulkAdd}>
-              <div className="method-icon">🗂</div>
+              <div className="method-icon"><Icon name="layers" size={24} /></div>
               <h3>Bulk add</h3>
               <p>Add many products at once with a shared category, then review before saving.</p>
-              <span className="method-arrow">→</span>
+              <span className="method-arrow"><Icon name="forward" size={20} /></span>
             </button>
           </div>
         </Modal>
@@ -546,7 +547,7 @@ export default function Products() {
                     alt=""
                     style={{ width: 80, height: 80, objectFit: 'cover', borderRadius: 10 }}
                   />
-                  <button type="button" className="btn btn-ghost" onClick={openPhotoRecrop}>✎ Move / crop photo</button>
+                  <button type="button" className="btn btn-ghost" onClick={openPhotoRecrop}><Icon name="edit" size={14} /> Move / crop photo</button>
                 </div>
               )}
             </div>
@@ -570,7 +571,7 @@ export default function Products() {
             {[1, 2, 3].map((n, idx) => (
               <React.Fragment key={n}>
                 <div className={'wizard-step-dot ' + (modal.step === n ? 'active' : (modal.step > n ? 'done' : ''))}>
-                  {modal.step > n ? '✓' : n}
+                  {modal.step > n ? <Icon name="check" size={14} /> : n}
                 </div>
                 {idx < 2 && <div className="wizard-step-line" />}
               </React.Fragment>
@@ -614,7 +615,7 @@ export default function Products() {
                     category: !modal.showNewCategory ? '' : (allCategories[0] || '')
                   })}
                 >
-                  {modal.showNewCategory ? '← Choose existing category' : '+ Add new category'}
+                  {modal.showNewCategory ? <><Icon name="back" size={13} /> Choose existing category</> : '+ Add new category'}
                 </button>
               </div>
               {modal.showNewCategory && (
@@ -643,7 +644,7 @@ export default function Products() {
                       {r.image ? <img src={r.image} alt="" /> : (r.emoji || <span style={{ fontSize: 10, color: 'var(--muted)' }}>No photo</span>)}
                     </div>
                     <label className="btn btn-ghost bulk-item-replace" style={{ cursor: 'pointer', display: 'block', textAlign: 'center' }}>
-                      📷 {r.image ? 'Replace' : 'Upload'}
+                      <Icon name="camera" size={14} /> {r.image ? 'Replace' : 'Upload'}
                       <input
                         type="file"
                         accept="image/*"
@@ -653,7 +654,7 @@ export default function Products() {
                     </label>
                     {r.image && (
                       <button type="button" className="btn btn-ghost bulk-item-replace" onClick={() => bulkOpenRecrop(r.id, r.image)}>
-                        ✎ Move / crop
+                        <Icon name="edit" size={14} /> Move / crop
                       </button>
                     )}
                     {r.image && (
@@ -692,8 +693,8 @@ export default function Products() {
                       <input type="number" min="0" step="1" value={r.lowStockAt} onChange={(e) => bulkUpdateRow(r.id, 'lowStockAt', e.target.value)} />
                     </div>
                     <div className="ff-full" style={{ display: 'flex', gap: 6, justifyContent: 'flex-end', alignItems: 'center' }}>
-                      <button type="button" className="icon-btn" title="Move up" disabled={i === 0} onClick={() => bulkMoveRow(i, -1)}>↑</button>
-                      <button type="button" className="icon-btn" title="Move down" disabled={i === modal.rows.length - 1} onClick={() => bulkMoveRow(i, 1)}>↓</button>
+                      <button type="button" className="icon-btn" title="Move up" disabled={i === 0} onClick={() => bulkMoveRow(i, -1)}><Icon name="up" size={15} /></button>
+                      <button type="button" className="icon-btn" title="Move down" disabled={i === modal.rows.length - 1} onClick={() => bulkMoveRow(i, 1)}><Icon name="down" size={15} /></button>
                       <button
                         type="button"
                         className="btn btn-ghost"
@@ -701,7 +702,7 @@ export default function Products() {
                         disabled={modal.rows.length <= 1}
                         onClick={() => bulkRemoveRow(r.id)}
                       >
-                        🗑 Remove row
+                        <Icon name="trash" size={14} /> Remove row
                       </button>
                     </div>
                   </div>
@@ -735,7 +736,7 @@ export default function Products() {
                     >
                       {r.image
                         ? <img src={r.image} alt="" style={{ width: 32, height: 32, borderRadius: 7, objectFit: 'cover', flex: 'none' }} />
-                        : <div style={{ width: 32, height: 32, borderRadius: 7, background: 'var(--accent-softer)', flex: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14 }}>{r.emoji || '🩷'}</div>}
+                        : <div style={{ width: 32, height: 32, borderRadius: 7, background: 'var(--accent-softer)', flex: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14 }}>{r.emoji || <Icon name="image" size={14} />}</div>}
                       <div style={{ fontWeight: 700, flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.name}</div>
                       <div className="mono" style={{ color: 'var(--muted)', fontSize: 12 }}>{money(parseFloat(r.price) || 0, cur)} · stock {parseInt(r.stock, 10) || 0}</div>
                     </div>
@@ -749,11 +750,11 @@ export default function Products() {
           {!modal.cropSrc && (
           <div className="modal-actions">
             {modal.step > 1
-              ? <button type="button" className="btn btn-ghost" onClick={bulkBack}>← Back</button>
+              ? <button type="button" className="btn btn-ghost" onClick={bulkBack}><Icon name="back" size={14} /> Back</button>
               : <button type="button" className="btn btn-ghost" onClick={() => setModal(null)}>Cancel</button>}
             <div style={{ flex: 1 }} />
             {modal.step < 3
-              ? <button type="button" className="btn btn-primary" onClick={bulkNext}>Next →</button>
+              ? <button type="button" className="btn btn-primary" onClick={bulkNext}>Next <Icon name="forward" size={14} /></button>
               : <button type="button" className="btn btn-primary" onClick={bulkSubmit}>Add {modal.rows.filter((r) => r.name.trim()).length} products</button>}
           </div>
           )}

@@ -1,11 +1,11 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import Icon from './Icon.jsx';
 import { sb } from '../lib/supabaseClient';
 import { useShop } from '../lib/ShopContext.jsx';
 import { useCart } from '../lib/cart.js';
 import { saveBuyerContact } from '../lib/api.js';
 import { navigate } from '../lib/router.js';
 import { money } from '../lib/utils.js';
-import { CATEGORY_EMOJI } from '../lib/constants.js';
 import Modal from './Modal.jsx';
 
 const PAYMENT_METHODS = ['Cash', 'GCash', 'GoTyme', 'Maya'];
@@ -136,7 +136,7 @@ export default function Storefront({ slug }) {
         <div className="store-nav-actions">
           {!shop && (
             <button className="btn btn-ghost btn-sm" onClick={() => setCartStep('cart')}>
-              🛒 Cart{cart.count > 0 ? ` (${cart.count})` : ''}
+              <Icon name="cart" size={16} /> Cart{cart.count > 0 ? ` (${cart.count})` : ''}
             </button>
           )}
           {shop && <button className="btn btn-primary btn-sm" onClick={() => navigate('/dashboard')}>Dashboard</button>}
@@ -153,9 +153,9 @@ export default function Storefront({ slug }) {
       </header>
 
       <section className="store-hero">
-        <h1>{slug ? heading : 'Shop handmade crafts 🌸'}</h1>
+        <h1>{slug ? heading : 'Shop handmade crafts'}</h1>
         <p>{slug ? 'Browse what is in stock right now.' : 'Pins, prints, charms and more — fresh from our small-shop sellers.'}</p>
-        {slug && <a className="link-btn" href="#/">← All shops</a>}
+        {slug && <a className="link-btn" href="#/"><Icon name="back" size={13} /> All shops</a>}
       </section>
 
       <div className="store-body">
@@ -189,7 +189,7 @@ export default function Storefront({ slug }) {
           {filtered.map((p) => (
             <button key={p.shopSlug + p.id} className="store-card" onClick={() => openProduct(p)}>
               <div className="store-media">
-                {p.image ? <img src={p.image} alt={p.name} loading="lazy" /> : <span>{p.emoji || CATEGORY_EMOJI[p.category] || '🩷'}</span>}
+                {p.image ? <img src={p.image} alt={p.name} loading="lazy" /> : <span>{p.emoji || <Icon name="image" size={40} />}</span>}
                 {p.stock <= 3 && <span className="store-badge">Only {p.stock} left</span>}
               </div>
               <div className="store-info">
@@ -205,7 +205,7 @@ export default function Storefront({ slug }) {
       {open && (
         <Modal title={open.name} onClose={() => setOpen(null)}>
           <div className="store-detail-media">
-            {open.image ? <img src={open.image} alt={open.name} /> : <span>{open.emoji || CATEGORY_EMOJI[open.category] || '🩷'}</span>}
+            {open.image ? <img src={open.image} alt={open.name} /> : <span>{open.emoji || <Icon name="image" size={64} />}</span>}
           </div>
           <div className="store-price mono" style={{ fontSize: 22, margin: '12px 0 4px' }}>{money(open.price, open.currency)}</div>
           <p className="hint" style={{ margin: '0 0 14px' }}>
@@ -241,7 +241,7 @@ export default function Storefront({ slug }) {
                   <div className="cart-shop">{g.shopName}</div>
                   {g.lines.map((l) => (
                     <div className="cart-line" key={l.productId}>
-                      <div className="cart-emoji">{l.emoji || CATEGORY_EMOJI[l.category] || '🩷'}</div>
+                      <div className="cart-emoji">{l.emoji || <Icon name="image" size={18} />}</div>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div className="store-name">{l.name}</div>
                         <div className="store-price mono">{money(l.price, g.currency)}</div>
@@ -312,7 +312,7 @@ export default function Storefront({ slug }) {
       )}
 
       {cartStep === 'done' && (
-        <Modal title="Order placed 🎉" onClose={() => setCartStep(null)}>
+        <Modal title={<span><Icon name="success" size={20} className="ok-icon" /> Order placed</span>} onClose={() => setCartStep(null)}>
           {placed.map((o, i) => (
             <p key={i} style={{ margin: '0 0 8px' }}>
               <b>{o.shopName}</b> received your order · <span className="mono">{money(o.total, o.currency)}</span>

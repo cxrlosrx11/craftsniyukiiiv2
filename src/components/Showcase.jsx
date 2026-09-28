@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import Icon from './Icon.jsx';
 import { useShop } from '../lib/ShopContext.jsx';
 import { shopLink } from '../lib/router.js';
 import { money } from '../lib/utils.js';
@@ -43,7 +44,7 @@ export default function Showcase() {
             {liveProducts.map((p) => (
               <div className="thumb-card" key={p.id}>
                 <div className="thumb-media">
-                  {p.image ? <img src={p.image} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : (p.emoji || '🩷')}
+                  {p.image ? <img src={p.image} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : (p.emoji || <Icon name="image" size={22} />)}
                 </div>
                 <div className="thumb-body">
                   <div className="thumb-name">{p.name}</div>

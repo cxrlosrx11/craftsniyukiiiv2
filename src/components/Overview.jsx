@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import Icon from './Icon.jsx';
 import { useShop } from '../lib/ShopContext.jsx';
 import { money, fmtDateTime, toPHP, fromPHP } from '../lib/utils.js';
 import { CURRENCIES } from '../lib/constants.js';
@@ -65,10 +66,10 @@ export default function Overview({ goTo }) {
             </div>
             <div className="quick-actions">
               <button className="quick-btn sale" onClick={() => goTo('pos')}>
-                <span className="qi">🛒</span> Record a sale
+                <span className="qi"><Icon name="cart" size={20} /></span> Record a sale
               </button>
               <button className="quick-btn restock" onClick={() => goTo('pos')}>
-                <span className="qi">📦</span> Restock items
+                <span className="qi"><Icon name="package" size={20} /></span> Restock items
               </button>
             </div>
           </div>
@@ -90,7 +91,7 @@ export default function Overview({ goTo }) {
                 {products.slice(0, 12).map((p) => (
                   <div className="thumb-card" key={p.id}>
                     <div className="thumb-media">
-                      {p.image ? <img src={p.image} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : (p.emoji || '🩷')}
+                      {p.image ? <img src={p.image} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : (p.emoji || <Icon name="image" size={22} />)}
                     </div>
                     <div className="thumb-body">
                       <div className="thumb-name">{p.name}</div>
@@ -106,7 +107,7 @@ export default function Overview({ goTo }) {
         <div className="ov-side">
           <div className="side-panel">
             <div className="side-panel-head">
-              <h3>🧾 Recent sales</h3>
+              <h3><Icon name="breakdown" size={18} /> Recent sales</h3>
               <button className="view-all" onClick={() => goTo('reports')}>View all</button>
             </div>
             {recentSales.length === 0 ? (
@@ -126,7 +127,7 @@ export default function Overview({ goTo }) {
           </div>
 
           <div className="side-panel prep-panel">
-            <div className="side-panel-head"><h3>🎪 Next convention</h3></div>
+            <div className="side-panel-head"><h3><Icon name="convention" size={18} /> Next convention</h3></div>
             {data.conventions.length === 0 ? (
               <p>No upcoming conventions logged yet. Add one from the Conventions tab to start tracking prep.</p>
             ) : (

@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import Icon from './Icon.jsx';
 import { useShop } from '../lib/ShopContext.jsx';
 import { money, fmtDateTime, toPHP, fromPHP } from '../lib/utils.js';
 
@@ -59,7 +60,7 @@ export default function Reports() {
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <span className="mono" style={{ fontWeight: 700 }}>{money(s.total, cur)}</span>
-              <button className="icon-btn" title="Undo sale" onClick={() => undoSale(s.id)}>↩</button>
+              <button className="icon-btn" title="Undo sale" onClick={() => undoSale(s.id)}><Icon name="undo" size={15} /></button>
             </div>
           </div>
         </div>

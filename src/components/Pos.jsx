@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import Icon from './Icon.jsx';
 import { useShop } from '../lib/ShopContext.jsx';
 import { money, uid } from '../lib/utils.js';
 
@@ -131,11 +132,11 @@ export default function Pos() {
 
       <div className="pos-toolbar">
         <div className="pos-toggle">
-          <button type="button" className={mode === 'sell' ? 'active' : ''} onClick={() => { setMode('sell'); setErrorMsg(''); setSuccessMsg(''); }}>🛒 Sell</button>
-          <button type="button" className={mode === 'restock' ? 'active' : ''} onClick={() => { setMode('restock'); setErrorMsg(''); setSuccessMsg(''); }}>📦 Restock</button>
+          <button type="button" className={mode === 'sell' ? 'active' : ''} onClick={() => { setMode('sell'); setErrorMsg(''); setSuccessMsg(''); }}><Icon name="cart" size={15} /> Sell</button>
+          <button type="button" className={mode === 'restock' ? 'active' : ''} onClick={() => { setMode('restock'); setErrorMsg(''); setSuccessMsg(''); }}><Icon name="package" size={15} /> Restock</button>
         </div>
         <div className="pos-search-wrap">
-          <span className="si">🔍</span>
+          <span className="si"><Icon name="search" size={15} /></span>
           <input placeholder="Search by product name or category" value={search} onChange={(e) => setSearch(e.target.value)} />
         </div>
       </div>
@@ -160,7 +161,7 @@ export default function Pos() {
                 onClick={() => addToCart(p)}
               >
                 <div style={{ height: 70, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, background: 'var(--accent-softer)', borderRadius: 8, marginBottom: 6, overflow: 'hidden' }}>
-                  {p.image ? <img src={p.image} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : (p.emoji || '🩷')}
+                  {p.image ? <img src={p.image} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : (p.emoji || <Icon name="image" size={22} />)}
                 </div>
                 <div style={{ fontSize: 12.5, fontWeight: 700 }}>{p.name}</div>
                 <div className="mono" style={{ fontSize: 12, color: 'var(--muted)' }}>{money(p.price, cur)} · {p.stock} left</div>
@@ -183,7 +184,7 @@ export default function Pos() {
                 <button className="pos-qty-btn" onClick={() => qtyChange(l.productId, -1)}>−</button>
                 <span className="pos-qty-val">{l.qty}</span>
                 <button className="pos-qty-btn" onClick={() => qtyChange(l.productId, 1)}>+</button>
-                <button className="pos-cart-remove" onClick={() => removeFromCart(l.productId)}>✕</button>
+                <button className="pos-cart-remove" onClick={() => removeFromCart(l.productId)}><Icon name="close" size={13} /></button>
               </div>
             </div>
           ))}
@@ -221,14 +222,14 @@ export default function Pos() {
               </div>
               {errorMsg && <div className="form-error">{errorMsg}</div>}
               {successMsg && <div className="form-success">{successMsg}</div>}
-              <button type="button" className="btn btn-primary btn-block" disabled={!cart.length} onClick={checkout}>🛒 Checkout</button>
+              <button type="button" className="btn btn-primary btn-block" disabled={!cart.length} onClick={checkout}><Icon name="cart" size={16} /> Checkout</button>
             </div>
           ) : (
             <div className="pos-summary">
               <div className="pos-restock-count-row"><span>Restock count</span><span className="v">{restockCount} pcs</span></div>
               {errorMsg && <div className="form-error">{errorMsg}</div>}
               {successMsg && <div className="form-success">{successMsg}</div>}
-              <button type="button" className="btn btn-primary btn-block" disabled={!cart.length} onClick={recordRestock}>📦 Record restock</button>
+              <button type="button" className="btn btn-primary btn-block" disabled={!cart.length} onClick={recordRestock}><Icon name="package" size={16} /> Record restock</button>
             </div>
           )}
         </div>

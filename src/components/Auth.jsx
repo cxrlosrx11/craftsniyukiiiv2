@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import Icon from './Icon.jsx';
 import { useShop } from '../lib/ShopContext.jsx';
 
 export default function Auth() {
@@ -62,7 +63,7 @@ export default function Auth() {
   return (
     <div className="auth-shell">
       <div className="auth-card">
-        <a className="link-btn auth-back" href="#/">← Back to shop</a>
+        <a className="link-btn auth-back" href="#/"><Icon name="back" size={14} /> Back to shop</a>
         <div className="auth-brand">
           <div className="auth-logo">CY</div>
           <div className="auth-brand-text">Crafts ni Yukiii</div>
@@ -104,8 +105,8 @@ export default function Auth() {
         ) : (
           <form onSubmit={handleSignup} key={authRole}>
             <div className="chips" style={{ marginBottom: 14 }}>
-              <button type="button" className={'chip ' + (authRole === 'buyer' ? 'active' : '')} onClick={() => { setAuthRole('buyer'); setErrorMsg(''); }}>🛍️ I want to buy</button>
-              <button type="button" className={'chip ' + (authRole === 'seller' ? 'active' : '')} onClick={() => { setAuthRole('seller'); setErrorMsg(''); }}>🏪 I want to sell</button>
+              <button type="button" className={'chip ' + (authRole === 'buyer' ? 'active' : '')} onClick={() => { setAuthRole('buyer'); setErrorMsg(''); }}><Icon name="shopbag" size={15} /> I want to buy</button>
+              <button type="button" className={'chip ' + (authRole === 'seller' ? 'active' : '')} onClick={() => { setAuthRole('seller'); setErrorMsg(''); }}><Icon name="store" size={15} /> I want to sell</button>
             </div>
             {authRole === 'buyer' ? (
               <>

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import Icon from './Icon.jsx';
 import { useShop } from '../lib/ShopContext.jsx';
 import { fmtDateTime, uid } from '../lib/utils.js';
 
@@ -40,7 +41,7 @@ export default function Feedback() {
               <div className="form-field">
                 <label>Rating</label>
                 <select name="rating" defaultValue="5">
-                  {[5, 4, 3, 2, 1].map((r) => <option key={r} value={r}>{'⭐'.repeat(r)}</option>)}
+                  {[5, 4, 3, 2, 1].map((r) => <option key={r} value={r}>{r} {r === 1 ? 'star' : 'stars'}</option>)}
                 </select>
               </div>
             </div>
@@ -57,10 +58,10 @@ export default function Feedback() {
         <div className="plist-item" key={f.id}>
           <div className="plist-top">
             <div className="plist-title-meta">
-              <span className="plist-name">{'⭐'.repeat(f.rating)} {f.author}</span>
+              <span className="plist-name">{Array.from({ length: f.rating }).map((_, i) => <Icon key={i} name="star" size={13} fill="currentColor" className="star-on" />)} {f.author}</span>
               <div className="plist-tags"><span className="plist-cat">{fmtDateTime(f.date)}</span></div>
             </div>
-            <button className="icon-btn" onClick={() => deleteFeedback(f.id)}>🗑</button>
+            <button className="icon-btn" title="Delete" onClick={() => deleteFeedback(f.id)}><Icon name="trash" size={15} /></button>
           </div>
           <p className="hint">{f.message}</p>
         </div>

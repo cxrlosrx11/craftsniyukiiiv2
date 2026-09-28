@@ -1,4 +1,5 @@
 import React from 'react';
+import Icon from './Icon.jsx';
 
 export default function Modal({ title, onClose, children, wide }) {
   return (
@@ -19,7 +20,7 @@ export default function Modal({ title, onClose, children, wide }) {
       >
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
           <h3 style={{ margin: 0 }}>{title}</h3>
-          <button className="icon-btn" onClick={onClose}>✕</button>
+          <button className="icon-btn" onClick={onClose}><Icon name="close" size={16} /></button>
         </div>
         {children}
       </div>

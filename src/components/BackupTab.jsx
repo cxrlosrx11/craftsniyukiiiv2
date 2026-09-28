@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import Icon from './Icon.jsx';
 import { useShop } from '../lib/ShopContext.jsx';
 
 export default function BackupTab() {
@@ -51,12 +52,12 @@ export default function BackupTab() {
       <div className="panel">
         <div className="panel-head"><div className="panel-title">Export a backup</div></div>
         <p className="hint">Downloads a JSON file with all your products, sales, conventions, expenses, and feedback. Do this regularly.</p>
-        <button className="btn btn-primary" onClick={exportBackup}>⬇ Download backup</button>
+        <button className="btn btn-primary" onClick={exportBackup}><Icon name="download" size={16} /> Download backup</button>
       </div>
 
       <div className="panel">
         <div className="panel-head"><div className="panel-title">Restore from a backup</div></div>
-        <p className="hint">⚠️ This replaces all current data with the backup file's contents. This cannot be undone.</p>
+        <p className="hint"><Icon name="warning" size={15} /> This replaces all current data with the backup file's contents. This cannot be undone.</p>
         <input type="file" accept="application/json" onChange={onImportFile} />
         {errorMsg && <div className="form-error">{errorMsg}</div>}
         {successMsg && <div className="form-success">{successMsg}</div>}

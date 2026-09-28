@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import Icon from './Icon.jsx';
 import { useShop } from '../lib/ShopContext.jsx';
 import Modal from './Modal.jsx';
 import { uid } from '../lib/utils.js';
@@ -58,8 +59,8 @@ export default function Conventions() {
               </div>
             </div>
             <div className="plist-actions">
-              <button className="icon-btn" onClick={() => openEdit(c.id)}>✎</button>
-              <button className="icon-btn" onClick={() => deleteConvention(c.id)}>🗑</button>
+              <button className="icon-btn" title="Edit" onClick={() => openEdit(c.id)}><Icon name="edit" size={15} /></button>
+              <button className="icon-btn" title="Delete" onClick={() => deleteConvention(c.id)}><Icon name="trash" size={15} /></button>
             </div>
           </div>
           {c.notes && <p className="hint">{c.notes}</p>}

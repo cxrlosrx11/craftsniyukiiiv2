@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import Icon from './Icon.jsx';
 import { sb } from '../lib/supabaseClient';
 import { useShop } from '../lib/ShopContext.jsx';
 import { navigate } from '../lib/router.js';
@@ -7,29 +8,29 @@ const NAV_SECTIONS = [
   {
     title: 'Shop',
     links: [
-      { tab: 'overview', icon: '🏠', label: 'Overview' },
-      { tab: 'products', icon: '📦', label: 'Products' },
-      { tab: 'pos', icon: '🛒', label: 'On-site sales' },
-      { tab: 'orders', icon: '📬', label: 'Online orders' },
-      { tab: 'conventions', icon: '🎪', label: 'Conventions' },
-      { tab: 'costs', icon: '💸', label: 'Expenses' }
+      { tab: 'overview', icon: 'home', label: 'Overview' },
+      { tab: 'products', icon: 'package', label: 'Products' },
+      { tab: 'pos', icon: 'cart', label: 'On-site sales' },
+      { tab: 'orders', icon: 'orders', label: 'Online orders' },
+      { tab: 'conventions', icon: 'convention', label: 'Conventions' },
+      { tab: 'costs', icon: 'expenses', label: 'Expenses' }
     ]
   },
   {
     title: 'Insights',
     links: [
-      { tab: 'reports', icon: '📊', label: 'Reports' },
-      { tab: 'breakdown', icon: '🧾', label: 'Breakdown' }
+      { tab: 'reports', icon: 'reports', label: 'Reports' },
+      { tab: 'breakdown', icon: 'breakdown', label: 'Breakdown' }
     ]
   },
   {
     title: 'More',
     links: [
-      { tab: 'showcase', icon: '🌟', label: 'Showcase' },
-      { tab: 'invite', icon: '💌', label: 'Invite buyers' },
-      { tab: 'feedback', icon: '💬', label: 'Feedback' },
-      { tab: 'import', icon: '⬆️', label: 'Import CSV' },
-      { tab: 'backup', icon: '🗄️', label: 'Backup & restore' }
+      { tab: 'showcase', icon: 'store', label: 'Showcase' },
+      { tab: 'invite', icon: 'invite', label: 'Invite buyers' },
+      { tab: 'feedback', icon: 'feedback', label: 'Feedback' },
+      { tab: 'import', icon: 'import', label: 'Import CSV' },
+      { tab: 'backup', icon: 'backup', label: 'Backup & restore' }
     ]
   }
 ];
@@ -59,7 +60,7 @@ export default function Sidebar({ sellerTab, setSellerTab, navOpen, setNavOpen }
       <div className="brand">
         <div className="brand-logo">CY</div>
         <div className="brand-text">Crafts ni Yukiii</div>
-        <button className="nav-collapse-btn" onClick={() => setNavOpen(false)}>✕</button>
+        <button className="nav-collapse-btn" onClick={() => setNavOpen(false)}><Icon name="close" size={16} /></button>
       </div>
 
       <button
@@ -67,7 +68,7 @@ export default function Sidebar({ sellerTab, setSellerTab, navOpen, setNavOpen }
         className="sell-btn"
         onClick={() => pick('pos')}
       >
-        🛒 Quick sale
+        <Icon name="cart" size={18} /> Quick sale
       </button>
 
       {NAV_SECTIONS.map((section) => (
@@ -80,7 +81,7 @@ export default function Sidebar({ sellerTab, setSellerTab, navOpen, setNavOpen }
               className={'side-link ' + (sellerTab === link.tab ? 'active' : '')}
               onClick={() => pick(link.tab)}
             >
-              <span className="ic">{link.icon}</span> {link.label}
+              <span className="ic"><Icon name={link.icon} size={18} /></span> {link.label}
               {link.tab === 'orders' && pending > 0 && <span className="nav-badge">{pending}</span>}
             </button>
           ))}
@@ -96,8 +97,8 @@ export default function Sidebar({ sellerTab, setSellerTab, navOpen, setNavOpen }
           <div className="profile-sub">@{shop.username}</div>
         </div>
       </div>
-      <button className="signout-btn" onClick={() => navigate('/')}>🛍️ View shop</button>
-      <button className="signout-btn" onClick={async () => { await logout(); navigate('/'); }}>⎋ Log out</button>
+      <button className="signout-btn" onClick={() => navigate('/')}><Icon name="shopbag" size={16} /> View shop</button>
+      <button className="signout-btn" onClick={async () => { await logout(); navigate('/'); }}><Icon name="logout" size={16} /> Log out</button>
     </div>
   );
 }
