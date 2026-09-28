@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useShop } from '../lib/ShopContext.jsx';
 
 export default function Auth() {
-  const { authView, setAuthView, login, signup } = useShop();
+  const { authView, setAuthView, authRole, setAuthRole, login, signup, signupBuyer } = useShop();
   const [busy, setBusy] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
@@ -26,7 +26,11 @@ export default function Auth() {
     const fd = new FormData(e.target);
     setErrorMsg(''); setSuccessMsg(''); setBusy(true);
     try {
-      await signup(fd.get('shopName'), fd.get('username'), fd.get('email'), fd.get('password'));
+      if (authRole === 'buyer') {
+        await signupBuyer(fd.get('fullName'), fd.get('email'), fd.get('password'), fd.get('phone'));
+      } else {
+        await signup(fd.get('shopName'), fd.get('username'), fd.get('email'), fd.get('password'));
+      }
     } catch (err) {
       if (err && err.isNotice) {
         setSuccessMsg(err.friendly);
@@ -85,6 +89,7 @@ export default function Auth() {
             <div className="form-field">
               <label>Username or email</label>
               <input name="identifier" required />
+              <span className="hint small">Buyers log in with their email. Sellers can use a username or email.</span>
             </div>
             <div className="form-field">
               <label>Password</label>
@@ -97,15 +102,34 @@ export default function Auth() {
             </button>
           </form>
         ) : (
-          <form onSubmit={handleSignup}>
-            <div className="form-field">
-              <label>Shop name</label>
-              <input name="shopName" required />
+          <form onSubmit={handleSignup} key={authRole}>
+            <div className="chips" style={{ marginBottom: 14 }}>
+              <button type="button" className={'chip ' + (authRole === 'buyer' ? 'active' : '')} onClick={() => { setAuthRole('buyer'); setErrorMsg(''); }}>🛍️ I want to buy</button>
+              <button type="button" className={'chip ' + (authRole === 'seller' ? 'active' : '')} onClick={() => { setAuthRole('seller'); setErrorMsg(''); }}>🏪 I want to sell</button>
             </div>
-            <div className="form-field">
-              <label>Username</label>
-              <input name="username" required />
-            </div>
+            {authRole === 'buyer' ? (
+              <>
+                <div className="form-field">
+                  <label>Full name</label>
+                  <input name="fullName" required />
+                </div>
+                <div className="form-field">
+                  <label>Contact number</label>
+                  <input name="phone" type="tel" required />
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="form-field">
+                  <label>Shop name</label>
+                  <input name="shopName" required />
+                </div>
+                <div className="form-field">
+                  <label>Username</label>
+                  <input name="username" required />
+                </div>
+              </>
+            )}
             <div className="form-field">
               <label>Email</label>
               <input name="email" type="email" required />
@@ -118,7 +142,7 @@ export default function Auth() {
             {errorMsg && <div className="form-error">{errorMsg}</div>}
             {successMsg && <div className="form-success">{successMsg}</div>}
             <button className="btn btn-primary btn-block" type="submit" disabled={busy}>
-              {busy ? 'Creating shop…' : 'Create my shop'}
+              {busy ? 'Creating account…' : (authRole === 'buyer' ? 'Create buyer account' : 'Create my shop')}
             </button>
           </form>
         )}

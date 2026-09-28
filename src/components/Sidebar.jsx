@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { sb } from '../lib/supabaseClient';
 import { useShop } from '../lib/ShopContext.jsx';
 import { navigate } from '../lib/router.js';
 
@@ -9,6 +10,7 @@ const NAV_SECTIONS = [
       { tab: 'overview', icon: '🏠', label: 'Overview' },
       { tab: 'products', icon: '📦', label: 'Products' },
       { tab: 'pos', icon: '🛒', label: 'On-site sales' },
+      { tab: 'orders', icon: '📬', label: 'Online orders' },
       { tab: 'conventions', icon: '🎪', label: 'Conventions' },
       { tab: 'costs', icon: '💸', label: 'Expenses' }
     ]
@@ -34,6 +36,17 @@ const NAV_SECTIONS = [
 
 export default function Sidebar({ sellerTab, setSellerTab, navOpen, setNavOpen }) {
   const { shop, logout } = useShop();
+  const [pending, setPending] = useState(0);
+  useEffect(() => {
+    let alive = true;
+    async function check() {
+      const res = await sb.from('orders').select('id', { count: 'exact', head: true }).eq('status', 'Pending');
+      if (alive && !res.error) setPending(res.count || 0);
+    }
+    check();
+    const t = setInterval(check, 60000);
+    return () => { alive = false; clearInterval(t); };
+  }, [sellerTab]);
   const initials = (shop.shopName || '?').trim().slice(0, 1).toUpperCase();
 
   function pick(tab) {
@@ -68,6 +81,7 @@ export default function Sidebar({ sellerTab, setSellerTab, navOpen, setNavOpen }
               onClick={() => pick(link.tab)}
             >
               <span className="ic">{link.icon}</span> {link.label}
+              {link.tab === 'orders' && pending > 0 && <span className="nav-badge">{pending}</span>}
             </button>
           ))}
         </div>
