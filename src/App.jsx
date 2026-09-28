@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useShop } from './lib/ShopContext.jsx';
 import Auth from './components/Auth.jsx';
 import Sidebar from './components/Sidebar.jsx';
@@ -14,15 +14,28 @@ import Feedback from './components/Feedback.jsx';
 import ImportTab from './components/ImportTab.jsx';
 import BackupTab from './components/BackupTab.jsx';
 import Pos from './components/Pos.jsx';
+import Storefront from './components/Storefront.jsx';
+import { useRoute, navigate } from './lib/router.js';
 
 export default function App() {
   const { booting, shop, loadError, retryLoad } = useShop();
   const [sellerTab, setSellerTab] = useState('overview');
   const [navOpen, setNavOpen] = useState(typeof window === 'undefined' || window.innerWidth > 920);
+  const route = useRoute();
+
+  // Once signed in, leave the login screen for the dashboard.
+  useEffect(() => {
+    if (!booting && shop && route.name === 'login') navigate('/dashboard');
+  }, [booting, shop, route.name]);
 
   if (booting) {
     return <div className="loading-screen">Loading Crafts ni Yukiii…</div>;
   }
+
+  // Public pages: the shop is the landing page.
+  if (route.name === 'home') return <Storefront />;
+  if (route.name === 'shop') return <Storefront slug={route.slug} />;
+  if (route.name === 'login' && !shop) return <Auth />;
 
   if (loadError) {
     return (
@@ -38,7 +51,7 @@ export default function App() {
   }
 
   if (!shop) {
-    return <Auth />;
+    return <Auth />; // /dashboard while signed out
   }
 
   let content;
