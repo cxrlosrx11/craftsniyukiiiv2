@@ -4,12 +4,14 @@ import { useEffect, useState } from 'react';
 //   #/               -> shop (landing page)
 //   #/shop/<slug>    -> one seller's shop
 //   #/login          -> sign in / sign up
+//   #/orders         -> buyer's order history (requires buyer login)
 //   #/dashboard      -> seller dashboard (requires login)
 export function parseHash() {
   const h = (window.location.hash || '').replace(/^#/, '') || '/';
   const parts = h.split('/').filter(Boolean);
   if (parts[0] === 'shop' && parts[1]) return { name: 'shop', slug: decodeURIComponent(parts[1]) };
   if (parts[0] === 'login') return { name: 'login' };
+  if (parts[0] === 'orders') return { name: 'orders' };
   if (parts[0] === 'dashboard') return { name: 'dashboard' };
   return { name: 'home' };
 }

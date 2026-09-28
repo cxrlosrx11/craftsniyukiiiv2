@@ -1,6 +1,6 @@
 import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { sb } from './supabaseClient';
-import { loadShopProfile, loadShopData, saveShopData, saveShopProfile } from './api';
+import { loadShopProfile, loadShopData, saveShopData, saveShopProfile, ensureBuyerProfile } from './api';
 import { defaultShopData } from './constants';
 import { uid } from './utils';
 
@@ -9,7 +9,9 @@ const ShopContext = createContext(null);
 export function ShopProvider({ children }) {
   const [booting, setBooting] = useState(true);
   const [authView, setAuthView] = useState('login'); // 'login' | 'signup'
+  const [authRole, setAuthRole] = useState('buyer'); // sign-up type: 'buyer' | 'seller'
   const [shop, setShop] = useState(null);
+  const [buyer, setBuyer] = useState(null);
   const [data, setData] = useState(defaultShopData());
   // dataLoaded gates saveShopData — it can only ever be true right after a
   // confirmed successful load. See lib/api.js for why this matters.
@@ -25,7 +27,12 @@ export function ShopProvider({ children }) {
       const session = sess && sess.session;
       if (!session) { setBooting(false); return; }
       const shopProfile = await loadShopProfile(session.user.id);
-      if (!shopProfile) { setBooting(false); return; }
+      if (!shopProfile) {
+        const b = await ensureBuyerProfile(session.user);
+        if (b) setBuyer(b);
+        setBooting(false);
+        return;
+      }
       setShop(shopProfile);
       try {
         const d = await loadShopData(shopProfile.id);
@@ -48,6 +55,7 @@ export function ShopProvider({ children }) {
     const { data: sub } = sb.auth.onAuthStateChange((event) => {
       if (event === 'SIGNED_OUT') {
         setShop(null);
+        setBuyer(null);
         setData(defaultShopData());
         setDataLoaded(false);
       }
@@ -78,7 +86,11 @@ export function ShopProvider({ children }) {
     const signInRes = await sb.auth.signInWithPassword({ email, password });
     if (signInRes.error) throw { friendly: 'No matching account. Check your details and try again.' };
     const shopProfile = await loadShopProfile(signInRes.data.user.id);
-    if (!shopProfile) throw { friendly: 'Signed in, but no shop profile was found for this account.' };
+    if (!shopProfile) {
+      const b = await ensureBuyerProfile(signInRes.data.user);
+      if (b) { setBuyer(b); return { role: 'buyer' }; }
+      throw { friendly: 'Signed in, but no account profile was found for this login.' };
+    }
     setShop(shopProfile);
     let d;
     try {
@@ -90,6 +102,24 @@ export function ShopProvider({ children }) {
     setData(d);
     setDataLoaded(true);
     setLoadError(false);
+    return { role: 'seller' };
+  }, []);
+
+  const signupBuyer = useCallback(async (fullName, email, password, phone) => {
+    if (!fullName || !email || !password || !phone) {
+      throw { friendly: 'Fill in every field to create your buyer account.' };
+    }
+    const res = await sb.auth.signUp({
+      email, password,
+      options: { data: { role: 'buyer', full_name: fullName.trim(), phone: phone.trim() } }
+    });
+    if (res.error) throw { friendly: res.error.message || 'Could not create your account.' };
+    if (!res.data.user || !res.data.session) {
+      throw { isNotice: true, friendly: 'Check your email to confirm your account, then log in.' };
+    }
+    const b = await ensureBuyerProfile(res.data.user);
+    if (!b) throw { friendly: 'Your account was created, but the buyer profile could not be saved. Try logging in.' };
+    setBuyer(b);
   }, []);
 
   const signup = useCallback(async (shopName, username, email, password) => {
@@ -121,6 +151,7 @@ export function ShopProvider({ children }) {
   const logout = useCallback(async () => {
     await sb.auth.signOut();
     setShop(null);
+    setBuyer(null);
     setData(defaultShopData());
     setDataLoaded(false);
   }, []);
@@ -148,7 +179,7 @@ export function ShopProvider({ children }) {
   }, []);
 
   const value = {
-    booting, authView, setAuthView, shop, data, dataLoaded, loadError,
+    booting, authView, setAuthView, authRole, setAuthRole, shop, buyer, setBuyer, signupBuyer, data, dataLoaded, loadError,
     mutate, login, signup, logout, retryLoad, updateShopProfile, uid
   };
 

@@ -57,3 +57,27 @@ export function saveShopProfile(shop) {
     currency: shop.currency
   }).eq('id', shop.id);
 }
+
+export function buyerRowToBuyer(row) {
+  return { id: row.id, fullName: row.full_name, email: row.email, phone: row.phone || '', address: row.address || '' };
+}
+
+// Loads the buyer profile. If the account was created as a buyer but the profile
+// row doesn't exist yet (e.g. email confirmation was required at sign-up), it is
+// created now from the details saved with the account.
+export async function ensureBuyerProfile(user) {
+  const res = await sb.from('buyers').select('*').eq('id', user.id).maybeSingle();
+  if (res.error) return null;
+  if (res.data) return buyerRowToBuyer(res.data);
+  const meta = user.user_metadata || {};
+  if (meta.role !== 'buyer') return null;
+  const ins = await sb.from('buyers').insert({
+    id: user.id, full_name: meta.full_name || 'Buyer', email: user.email, phone: meta.phone || null
+  }).select().maybeSingle();
+  if (ins.error || !ins.data) return null;
+  return buyerRowToBuyer(ins.data);
+}
+
+export async function saveBuyerContact(buyerId, phone, address) {
+  return sb.from('buyers').update({ phone, address }).eq('id', buyerId);
+}
