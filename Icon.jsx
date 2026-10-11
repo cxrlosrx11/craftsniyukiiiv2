@@ -23,7 +23,7 @@ const ICONS = {
   pin: Location01Icon, note: Note01Icon, check: Tick02Icon, refresh: RefreshIcon,
   search: Search01Icon, add: Add01Icon, layers: Layers01Icon, camera: Camera01Icon,
   undo: Undo02Icon, logout: Logout01Icon, gift: GiftIcon, image: Image01Icon,
-  success: CheckmarkCircle02Icon, star: StarIcon, sparkles: SparklesIcon, heart: FavouriteIcon, follow: UserAdd01Icon, following: UserCheck01Icon
+  success: CheckmarkCircle02Icon, star: StarIcon, sparkles: SparklesIcon, heart: FavouriteIcon, follow: UserAdd01Icon, following: UserCheck01Icon, pin: Location01Icon
 };
 
 export default function Icon({ name, size = 18, className = '', ...rest }) {

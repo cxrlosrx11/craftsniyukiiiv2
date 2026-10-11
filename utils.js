@@ -58,3 +58,34 @@ export function resizeImageFile(file, maxDim) {
     reader.readAsDataURL(file);
   });
 }
+
+// Center-crops an image to a wide banner (3:1) and keeps it small enough to store with the profile.
+export function coverFromFile(file, w = 1200, h = 400, maxChars = 240000) {
+  return new Promise((resolve) => {
+    if (!file || !file.type || file.type.indexOf('image/') !== 0) { resolve(null); return; }
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        const target = w / h;
+        let sw = img.width, sh = img.height, sx = 0, sy = 0;
+        if (img.width / img.height > target) { sw = Math.round(img.height * target); sx = Math.round((img.width - sw) / 2); }
+        else { sh = Math.round(img.width / target); sy = Math.round((img.height - sh) / 2); }
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, sx, sy, sw, sh, 0, 0, w, h);
+        for (const q of [0.78, 0.62, 0.48]) {
+          try {
+            const url = canvas.toDataURL('image/jpeg', q);
+            if (url.length <= maxChars) { resolve(url); return; }
+          } catch (e) { resolve(null); return; }
+        }
+        resolve(null);
+      };
+      img.onerror = () => resolve(null);
+      img.src = reader.result;
+    };
+    reader.onerror = () => resolve(null);
+    reader.readAsDataURL(file);
+  });
+}

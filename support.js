@@ -1,4 +1,5 @@
 import { sb } from './supabaseClient';
+import { THEME_KEYS, STATUSES } from './themes.js';
 
 // Only allow web links; anything else (e.g. "javascript:") is dropped.
 export function safeUrl(raw) {
@@ -12,13 +13,15 @@ export function safeUrl(raw) {
 }
 
 export const emptySupport = () => ({
-  tipsEnabled: false, avatar: '', bio: '', announcement: '', links: [], payMethods: [],
+  tipsEnabled: false, avatar: '', cover: '', tagline: '', location: '', status: 'open', theme: 'rose', policies: '', featured: [], bio: '', announcement: '', links: [], payMethods: [],
   goalTitle: '', goalAmount: 0
 });
 
 function rowToSupport(r) {
   return {
-    tipsEnabled: !!r.tips_enabled, avatar: r.avatar || '', bio: r.bio || '', announcement: r.announcement || '',
+    tipsEnabled: !!r.tips_enabled, avatar: r.avatar || '', cover: r.cover || '', tagline: r.tagline || '', location: r.location || '',
+    status: r.status || 'open', theme: r.theme || 'rose', policies: r.policies || '',
+    featured: Array.isArray(r.featured) ? r.featured.filter((x) => typeof x === 'string') : [], bio: r.bio || '', announcement: r.announcement || '',
     links: Array.isArray(r.links) ? r.links : [], payMethods: Array.isArray(r.pay_methods) ? r.pay_methods : [],
     goalTitle: r.goal_title || '', goalAmount: Number(r.goal_amount) || 0
   };
@@ -35,16 +38,21 @@ export async function saveSupport(shopId, s) {
   const payMethods = s.payMethods
     .map((m) => ({ method: (m.method || '').trim().slice(0, 30), number: (m.number || '').trim().slice(0, 40), accountName: (m.accountName || '').trim().slice(0, 60) }))
     .filter((m) => m.method && m.number).slice(0, 5);
+  const cover = typeof s.cover === 'string' && s.cover.startsWith('data:image/') && s.cover.length <= 250000 ? s.cover : '';
+  const status = Object.prototype.hasOwnProperty.call(STATUSES, s.status) ? s.status : 'open';
+  const theme = THEME_KEYS.includes(s.theme) ? s.theme : 'rose';
+  const featured = Array.from(new Set((s.featured || []).filter((x) => typeof x === 'string'))).slice(0, 6);
   const avatar = typeof s.avatar === 'string' && s.avatar.startsWith('data:image/') && s.avatar.length <= 150000 ? s.avatar : '';
   const res = await sb.from('shop_support').upsert({
-    shop_id: shopId, tips_enabled: !!s.tipsEnabled, avatar,
+    shop_id: shopId, tips_enabled: !!s.tipsEnabled, avatar, cover, status, theme, featured,
+    tagline: (s.tagline || '').trim().slice(0, 80), location: (s.location || '').trim().slice(0, 60), policies: (s.policies || '').trim().slice(0, 800),
     bio: s.bio.trim().slice(0, 600), announcement: s.announcement.trim().slice(0, 200),
     links, pay_methods: payMethods,
     goal_title: s.goalTitle.trim().slice(0, 80), goal_amount: Math.max(0, Number(s.goalAmount) || 0),
     updated_at: new Date().toISOString()
   }, { onConflict: 'shop_id' });
   if (res.error) throw res.error;
-  return { ...s, avatar, links, payMethods };
+  return { ...s, avatar, cover, status, theme, featured, links, payMethods };
 }
 
 // Start a fresh goal: only tips confirmed from now on count toward it.

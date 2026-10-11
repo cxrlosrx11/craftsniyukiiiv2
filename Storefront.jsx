@@ -12,6 +12,7 @@ import SupportCard from './SupportCard.jsx';
 import ProfileHeader from './ProfileHeader.jsx';
 import LikeButton from './LikeButton.jsx';
 import { fetchProfile, toggleFollow, toggleLike } from '../lib/social.js';
+import { themeStyle } from '../lib/themes.js';
 
 const PAYMENT_METHODS = ['Cash', 'GCash', 'GoTyme', 'Maya'];
 const AFTER_LOGIN_KEY = 'cy_after_login';
@@ -37,6 +38,11 @@ export default function Storefront({ slug }) {
   const socialRef = useRef({});
   socialRef.current = social;
   const [followBusy, setFollowBusy] = useState(false);
+  const [directory, setDirectory] = useState([]);
+  useEffect(() => {
+    if (slug) return;
+    sb.rpc('public_shop_directory').then((r) => { if (!r.error && Array.isArray(r.data)) setDirectory(r.data); });
+  }, [slug]);
   const buyerId = buyer ? buyer.id : null;
   const loadSocial = useCallback((s) => {
     fetchProfile(s).then((p) => { if (p) setSocial((m) => ({ ...m, [s]: p })); }).catch((e) => console.error(e));
@@ -108,6 +114,12 @@ export default function Storefront({ slug }) {
     items.forEach((i) => m.set(i.shopSlug, i.shopName));
     return Array.from(m, ([s, name]) => ({ slug: s, name }));
   }, [items]);
+
+  const featuredItems = useMemo(() => {
+    const prof = slug && social[slug];
+    if (!prof) return [];
+    return (prof.featured || []).map((id) => items.find((i) => i.id === id && i.shopSlug === slug)).filter(Boolean);
+  }, [slug, social, items]);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -183,8 +195,27 @@ export default function Storefront({ slug }) {
 
   const firstName = buyer ? (buyer.fullName || '').split(' ')[0] : '';
 
+  const renderCard = (p, prefix = '') => (
+            <div key={prefix + p.shopSlug + p.id} className="store-card" role="button" tabIndex={0}
+              onClick={() => openProduct(p)}
+              onKeyDown={(e) => { if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); openProduct(p); } }}>
+              <div className="store-media">
+                {p.image ? <img src={p.image} alt={p.name} loading="lazy" /> : <Icon name="image" size={40} />}
+                {p.stock <= 3 && <span className="store-badge">Only {p.stock} left</span>}
+                {slug && social[slug] && <LikeButton overlay {...likeInfo(p)} disabled={!!shop} onClick={() => like(p)} />}
+              </div>
+              <div className="store-info">
+                <div className="store-name">{p.name}</div>
+                {!slug && (
+                  <a className="store-seller store-seller-link" href={`#/shop/${encodeURIComponent(p.shopSlug)}`} onClick={(e) => e.stopPropagation()}>{p.shopName}</a>
+                )}
+                <div className="store-price mono">{money(p.price, p.currency)}</div>
+              </div>
+            </div>
+  );
+
   return (
-    <div className="store">
+    <div className="store" style={slug && social[slug] ? themeStyle(social[slug].theme) : undefined}>
       <header className="store-nav">
         <a className="store-brand" href="#/">
           <span className="brand-logo">CY</span>
@@ -228,6 +259,31 @@ export default function Storefront({ slug }) {
 
       <div className="store-body">
         {slug && <SupportCard slug={slug} />}
+        {slug && featuredItems.length > 0 && (
+          <div style={{ marginBottom: 18 }}>
+            <div className="side-section" style={{ padding: '0 0 8px' }}>Featured</div>
+            <div className="store-grid">{featuredItems.map((p) => renderCard(p, 'f-'))}</div>
+          </div>
+        )}
+        {slug && social[slug] && social[slug].policies && (
+          <details className="panel" style={{ marginBottom: 18 }}>
+            <summary style={{ cursor: 'pointer', fontWeight: 700 }}>Shipping &amp; shop policies</summary>
+            <p style={{ whiteSpace: 'pre-line', margin: '10px 0 0' }}>{social[slug].policies}</p>
+          </details>
+        )}
+        {!slug && directory.length > 0 && (
+          <div style={{ marginBottom: 14 }}>
+            <div className="side-section" style={{ padding: '0 0 8px' }}>Meet the shops</div>
+            <div className="shop-strip">
+              {directory.map((d) => (
+                <a key={d.slug} className="shop-chip" href={`#/shop/${encodeURIComponent(d.slug)}`}>
+                  <span className="shop-chip-avatar">{d.avatar ? <img src={d.avatar} alt="" /> : (d.shopName || '?').charAt(0).toUpperCase()}</span>
+                  <span className="shop-chip-text"><b>{d.shopName}</b>{d.tagline && <small>{d.tagline}</small>}</span>
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
         <div className="store-filters">
           <input className="list-search" placeholder="Search products…" value={search} onChange={(e) => setSearch(e.target.value)} />
           {!slug && sellers.length > 1 && (
@@ -255,22 +311,7 @@ export default function Storefront({ slug }) {
         )}
 
         <div className="store-grid">
-          {filtered.map((p) => (
-            <div key={p.shopSlug + p.id} className="store-card" role="button" tabIndex={0}
-              onClick={() => openProduct(p)}
-              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openProduct(p); } }}>
-              <div className="store-media">
-                {p.image ? <img src={p.image} alt={p.name} loading="lazy" /> : <Icon name="image" size={40} />}
-                {p.stock <= 3 && <span className="store-badge">Only {p.stock} left</span>}
-                {slug && social[slug] && <LikeButton overlay {...likeInfo(p)} disabled={!!shop} onClick={() => like(p)} />}
-              </div>
-              <div className="store-info">
-                <div className="store-name">{p.name}</div>
-                {!slug && <div className="store-seller">{p.shopName}</div>}
-                <div className="store-price mono">{money(p.price, p.currency)}</div>
-              </div>
-            </div>
-          ))}
+          {filtered.map((p) => renderCard(p))}
         </div>
       </div>
 
