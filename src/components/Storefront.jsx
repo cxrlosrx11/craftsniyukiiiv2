@@ -7,6 +7,7 @@ import { saveBuyerContact } from '../lib/api.js';
 import { navigate } from '../lib/router.js';
 import { money } from '../lib/utils.js';
 import Modal from './Modal.jsx';
+import SimilarProducts from './SimilarProducts.jsx';
 
 const PAYMENT_METHODS = ['Cash', 'GCash', 'GoTyme', 'Maya'];
 const AFTER_LOGIN_KEY = 'cy_after_login';
@@ -227,6 +228,7 @@ export default function Storefront({ slug }) {
               </button>
             </div>
           )}
+          <SimilarProducts target={open} items={items} onPick={openProduct} />
         </Modal>
       )}
 

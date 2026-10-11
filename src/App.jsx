@@ -15,6 +15,7 @@ import Feedback from './components/Feedback.jsx';
 import ImportTab from './components/ImportTab.jsx';
 import BackupTab from './components/BackupTab.jsx';
 import Pos from './components/Pos.jsx';
+import Insights from './components/Insights.jsx';
 import Storefront from './components/Storefront.jsx';
 import Orders from './components/Orders.jsx';
 import BuyerOrders from './components/BuyerOrders.jsx';
@@ -72,6 +73,7 @@ export default function App() {
     case 'costs': content = <Costs />; break;
     case 'reports': content = <Reports />; break;
     case 'breakdown': content = <Breakdown />; break;
+    case 'insights': content = <Insights />; break;
     case 'showcase': content = <Showcase />; break;
     case 'invite': content = <Invite />; break;
     case 'feedback': content = <Feedback />; break;

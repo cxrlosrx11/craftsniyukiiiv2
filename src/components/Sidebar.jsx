@@ -20,7 +20,8 @@ const NAV_SECTIONS = [
     title: 'Insights',
     links: [
       { tab: 'reports', icon: 'reports', label: 'Reports' },
-      { tab: 'breakdown', icon: 'breakdown', label: 'Breakdown' }
+      { tab: 'breakdown', icon: 'breakdown', label: 'Breakdown' },
+      { tab: 'insights', icon: 'sparkles', label: 'Smart insights' }
     ]
   },
   {

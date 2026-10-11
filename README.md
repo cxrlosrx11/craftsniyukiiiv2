@@ -48,6 +48,18 @@ data is never saved unless it was just successfully loaded — see
   Conventions, Costs, Reports, Breakdown, Showcase, Invite, Feedback,
   ImportTab (CSV), BackupTab (manual JSON export/import)
 
+## Smart insights (TensorFlow.js)
+
+- **Smart insights** tab (sidebar > Insights): 7-day sales forecast, restock watch,
+  often-bought-together pairs, and review sentiment. Everything runs in the browser
+  on data already loaded from Supabase; nothing new is stored or sent anywhere.
+- **You may also like** in the storefront product pop-up (similar category, fandom/IP,
+  price and seller, using public storefront data only).
+- All logic lives in `src/lib/ml.js`. TensorFlow.js is lazy-loaded, so it only downloads
+  when someone opens one of these features.
+- The forecast model is only used when it beats a plain 7-day average on recent
+  days it did not train on; otherwise the average is shown. It needs ~3 weeks of sales.
+
 ## Notes on the port
 
 - All state mutations go through `mutate()` in `ShopContext`, which deep-clones

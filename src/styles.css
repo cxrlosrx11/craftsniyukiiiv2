@@ -610,3 +610,13 @@
   .pos-search-wrap .si{display:flex;align-items:center;}
   .store-media .hi,.thumb-media .hi,.cart-thumb .hi,.store-detail-media .hi{color:var(--accent);opacity:.55;vertical-align:baseline;}
   .icon-btn .hi,.nav-collapse-btn .hi,.pos-cart-remove .hi{vertical-align:middle;}
+
+  /* Smart insights */
+  .ins-chart{width:100%;height:auto;display:block;margin:10px 0 6px;}
+  .ins-big{font-size:26px;font-weight:800;margin-top:4px;}
+  .ins-big span{font-size:13px;font-weight:600;color:var(--muted);}
+  .ins-row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);}
+  .ins-row:last-of-type{border-bottom:none;}
+  .ins-side{text-align:right;flex-shrink:0;}
+  .ins-words{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-bottom:14px;}
+  .ins-bad{color:#9a2b2b;background:#fbe9e9;}
