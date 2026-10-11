@@ -16,6 +16,7 @@ import ImportTab from './components/ImportTab.jsx';
 import BackupTab from './components/BackupTab.jsx';
 import Pos from './components/Pos.jsx';
 import Insights from './components/Insights.jsx';
+import SupportTab from './components/SupportTab.jsx';
 import Storefront from './components/Storefront.jsx';
 import Orders from './components/Orders.jsx';
 import BuyerOrders from './components/BuyerOrders.jsx';
@@ -35,9 +36,13 @@ export default function App() {
       if (['login', 'account', 'orders'].includes(route.name)) navigate('/dashboard');
     } else if (buyer) {
       if (route.name === 'login' || route.name === 'dashboard') {
-        let backToCheckout = false;
-        try { backToCheckout = localStorage.getItem('cy_after_login') === 'checkout'; } catch (e) { /* ignore */ }
-        navigate(backToCheckout ? '/' : '/account');
+        let backToCheckout = false, returnTo = '';
+        try {
+          backToCheckout = localStorage.getItem('cy_after_login') === 'checkout';
+          returnTo = localStorage.getItem('cy_return_to') || '';
+          if (returnTo) localStorage.removeItem('cy_return_to');
+        } catch (e) { /* ignore */ }
+        navigate(returnTo || (backToCheckout ? '/' : '/account'));
       }
     }
   }, [booting, shop, buyer, route.name]);
@@ -86,6 +91,7 @@ export default function App() {
     case 'reports': content = <Reports />; break;
     case 'breakdown': content = <Breakdown />; break;
     case 'insights': content = <Insights />; break;
+    case 'support': content = <SupportTab />; break;
     case 'showcase': content = <Showcase />; break;
     case 'invite': content = <Invite />; break;
     case 'feedback': content = <Feedback />; break;

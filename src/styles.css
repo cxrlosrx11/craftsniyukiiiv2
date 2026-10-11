@@ -620,3 +620,8 @@
   .ins-side{text-align:right;flex-shrink:0;}
   .ins-words{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-bottom:14px;}
   .ins-bad{color:#9a2b2b;background:#fbe9e9;}
+
+  /* Support / goals / milestones */
+  .goal-track{height:10px;border-radius:999px;background:var(--accent-softer);overflow:hidden;margin:6px 0 4px;}
+  .goal-fill{height:100%;border-radius:999px;background:var(--accent);transition:width .4s ease;}
+  .support-banner{display:flex;align-items:center;gap:8px;background:var(--accent-soft);color:var(--accent-dark);font-weight:700;font-size:14px;padding:12px 16px;border-radius:12px;margin-bottom:14px;}

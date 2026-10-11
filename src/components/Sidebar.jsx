@@ -29,6 +29,7 @@ const NAV_SECTIONS = [
     links: [
       { tab: 'showcase', icon: 'store', label: 'Showcase' },
       { tab: 'invite', icon: 'invite', label: 'Invite buyers' },
+      { tab: 'support', icon: 'gift', label: 'Support & goals' },
       { tab: 'feedback', icon: 'feedback', label: 'Feedback' },
       { tab: 'import', icon: 'import', label: 'Import CSV' },
       { tab: 'backup', icon: 'backup', label: 'Backup & restore' }
@@ -39,11 +40,14 @@ const NAV_SECTIONS = [
 export default function Sidebar({ sellerTab, setSellerTab, navOpen, setNavOpen }) {
   const { shop, logout } = useShop();
   const [pending, setPending] = useState(0);
+  const [pendingTips, setPendingTips] = useState(0);
   useEffect(() => {
     let alive = true;
     async function check() {
       const res = await sb.from('orders').select('id', { count: 'exact', head: true }).eq('status', 'Pending');
       if (alive && !res.error) setPending(res.count || 0);
+      const tipRes = await sb.from('tips').select('id', { count: 'exact', head: true }).eq('shop_id', shop.id).eq('status', 'Pending');
+      if (alive && !tipRes.error) setPendingTips(tipRes.count || 0);
     }
     check();
     const t = setInterval(check, 60000);
@@ -84,6 +88,7 @@ export default function Sidebar({ sellerTab, setSellerTab, navOpen, setNavOpen }
             >
               <span className="ic"><Icon name={link.icon} size={18} /></span> {link.label}
               {link.tab === 'orders' && pending > 0 && <span className="nav-badge">{pending}</span>}
+              {link.tab === 'support' && pendingTips > 0 && <span className="nav-badge">{pendingTips}</span>}
             </button>
           ))}
         </div>

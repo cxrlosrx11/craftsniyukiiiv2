@@ -8,6 +8,7 @@ import { navigate } from '../lib/router.js';
 import { money } from '../lib/utils.js';
 import Modal from './Modal.jsx';
 import SimilarProducts from './SimilarProducts.jsx';
+import SupportCard from './SupportCard.jsx';
 
 const PAYMENT_METHODS = ['Cash', 'GCash', 'GoTyme', 'Maya'];
 const AFTER_LOGIN_KEY = 'cy_after_login';
@@ -161,6 +162,7 @@ export default function Storefront({ slug }) {
       </section>
 
       <div className="store-body">
+        {slug && <SupportCard slug={slug} />}
         <div className="store-filters">
           <input className="list-search" placeholder="Search products…" value={search} onChange={(e) => setSearch(e.target.value)} />
           {!slug && sellers.length > 1 && (
