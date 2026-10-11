@@ -36,6 +36,7 @@ export default function BuyerOrders() {
           <span className="brand-text">Crafts ni Yukiii</span>
         </a>
         <div className="store-nav-actions">
+          <button className="btn btn-ghost btn-sm" onClick={() => navigate('/account')}>My account</button>
           <button className="btn btn-ghost btn-sm" onClick={() => navigate('/')}><Icon name="back" size={14} /> Back to shop</button>
           <button className="btn btn-ghost btn-sm" onClick={async () => { await logout(); navigate('/'); }}>Log out</button>
         </div>

@@ -143,6 +143,7 @@ export default function Storefront({ slug }) {
           {shop && <button className="btn btn-primary btn-sm" onClick={() => navigate('/dashboard')}>Dashboard</button>}
           {buyer && (
             <>
+              <button className="btn btn-ghost btn-sm" onClick={() => navigate('/account')}>My account</button>
               <button className="btn btn-ghost btn-sm" onClick={() => navigate('/orders')}>My orders</button>
               <button className="btn btn-ghost btn-sm" title={buyer.email} onClick={async () => { await logout(); }}>Hi, {firstName} · Log out</button>
             </>

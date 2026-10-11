@@ -19,6 +19,7 @@ import Insights from './components/Insights.jsx';
 import Storefront from './components/Storefront.jsx';
 import Orders from './components/Orders.jsx';
 import BuyerOrders from './components/BuyerOrders.jsx';
+import BuyerDashboard from './components/BuyerDashboard.jsx';
 import { useRoute, navigate } from './lib/router.js';
 
 export default function App() {
@@ -27,11 +28,18 @@ export default function App() {
   const [navOpen, setNavOpen] = useState(typeof window === 'undefined' || window.innerWidth > 920);
   const route = useRoute();
 
-  // Once signed in, leave the login screen for the dashboard.
+  // Keep the two account types apart: sellers use /dashboard, buyers use /account.
   useEffect(() => {
-    if (booting || route.name !== 'login') return;
-    if (shop) navigate('/dashboard');
-    else if (buyer) navigate('/');
+    if (booting) return;
+    if (shop) {
+      if (['login', 'account', 'orders'].includes(route.name)) navigate('/dashboard');
+    } else if (buyer) {
+      if (route.name === 'login' || route.name === 'dashboard') {
+        let backToCheckout = false;
+        try { backToCheckout = localStorage.getItem('cy_after_login') === 'checkout'; } catch (e) { /* ignore */ }
+        navigate(backToCheckout ? '/' : '/account');
+      }
+    }
   }, [booting, shop, buyer, route.name]);
 
   if (booting) {
@@ -39,6 +47,10 @@ export default function App() {
   }
 
   // Public pages: the shop is the landing page.
+  if (route.name === 'account') {
+    if (buyer) return <BuyerDashboard />;
+    if (!shop) return <Auth />;
+  }
   if (route.name === 'orders') {
     if (buyer) return <BuyerOrders />;
     if (!shop) return <Auth />;
@@ -46,7 +58,7 @@ export default function App() {
   if (route.name === 'home') return <Storefront />;
   if (route.name === 'shop') return <Storefront slug={route.slug} />;
   if (route.name === 'login' && !shop && !buyer) return <Auth />;
-  if (buyer) return <Storefront />; // buyers have no dashboard
+  if (buyer) return <BuyerDashboard />; // buyers never see the seller dashboard
 
   if (loadError) {
     return (

@@ -6,6 +6,15 @@ import { uid } from './utils';
 
 const ShopContext = createContext(null);
 
+// Which kind of account is this? Sign-up stamps role = 'buyer' | 'seller' on the
+// auth user. A buyer account is NEVER treated as a seller, even if a stray row
+// exists in `shops`. Accounts made before role-stamping have no role and fall
+// back to the old rule (has a shop row = seller).
+function roleOf(user) {
+  const r = user && user.user_metadata && user.user_metadata.role;
+  return r === 'buyer' || r === 'seller' ? r : null;
+}
+
 export function ShopProvider({ children }) {
   const [booting, setBooting] = useState(true);
   const [authView, setAuthView] = useState('login'); // 'login' | 'signup'
@@ -26,6 +35,12 @@ export function ShopProvider({ children }) {
       const { data: sess } = await sb.auth.getSession();
       const session = sess && sess.session;
       if (!session) { setBooting(false); return; }
+      if (roleOf(session.user) === 'buyer') {
+        const b = await ensureBuyerProfile(session.user);
+        if (b) setBuyer(b);
+        setBooting(false);
+        return;
+      }
       const shopProfile = await loadShopProfile(session.user.id);
       if (!shopProfile) {
         const b = await ensureBuyerProfile(session.user);
@@ -85,6 +100,11 @@ export function ShopProvider({ children }) {
     if (!email) throw { friendly: 'No matching account. Check your details and try again.' };
     const signInRes = await sb.auth.signInWithPassword({ email, password });
     if (signInRes.error) throw { friendly: 'No matching account. Check your details and try again.' };
+    if (roleOf(signInRes.data.user) === 'buyer') {
+      const b = await ensureBuyerProfile(signInRes.data.user);
+      if (b) { setBuyer(b); setShop(null); return { role: 'buyer' }; }
+      throw { friendly: 'Signed in, but no buyer profile was found for this login.' };
+    }
     const shopProfile = await loadShopProfile(signInRes.data.user.id);
     if (!shopProfile) {
       const b = await ensureBuyerProfile(signInRes.data.user);
@@ -130,7 +150,7 @@ export function ShopProvider({ children }) {
     if (!shopName || !username || !email || !password) {
       throw { friendly: 'Fill in every field to create your shop.' };
     }
-    const signUpRes = await sb.auth.signUp({ email, password });
+    const signUpRes = await sb.auth.signUp({ email, password, options: { data: { role: 'seller' } } });
     if (signUpRes.error) throw { friendly: signUpRes.error.message || 'Could not create your account.' };
     if (signUpRes.data.user && Array.isArray(signUpRes.data.user.identities) && signUpRes.data.user.identities.length === 0) {
       throw { friendly: 'That email is already registered (buyer and seller accounts cannot share one email). Log in instead, or use a different email.' };
