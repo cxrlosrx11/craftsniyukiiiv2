@@ -4,6 +4,7 @@ import { useShop } from '../lib/ShopContext.jsx';
 import { money, fmtDateTime, toPHP, fromPHP } from '../lib/utils.js';
 import { CURRENCIES } from '../lib/constants.js';
 import Achievements from './Achievements.jsx';
+import Audience from './Audience.jsx';
 
 export default function Overview({ goTo }) {
   const { shop, data, updateShopProfile } = useShop();
@@ -75,6 +76,7 @@ export default function Overview({ goTo }) {
             </div>
           </div>
 
+          <Audience />
           <Achievements />
 
           <div className="panel">

@@ -625,3 +625,42 @@
   .goal-track{height:10px;border-radius:999px;background:var(--accent-softer);overflow:hidden;margin:6px 0 4px;}
   .goal-fill{height:100%;border-radius:999px;background:var(--accent);transition:width .4s ease;}
   .support-banner{display:flex;align-items:center;gap:8px;background:var(--accent-soft);color:var(--accent-dark);font-weight:700;font-size:14px;padding:12px 16px;border-radius:12px;margin-bottom:14px;}
+
+  /* Seller profile, follow and likes */
+  .profile-head{display:flex;gap:18px;align-items:center;max-width:1100px;margin:0 auto;padding:28px 20px 10px;}
+  .profile-avatar{width:92px;height:92px;border-radius:50%;flex-shrink:0;overflow:hidden;display:flex;align-items:center;justify-content:center;background:var(--accent-soft);color:var(--accent-dark);font-size:36px;font-weight:800;border:3px solid #fff;box-shadow:var(--shadow);}
+  .profile-avatar img{width:100%;height:100%;object-fit:cover;display:block;}
+  .profile-main h1{font-size:clamp(22px,4.5vw,32px);margin:0;}
+  .profile-handle{color:var(--muted);font-size:13px;margin:2px 0 8px;}
+  .profile-stats{display:flex;gap:16px;flex-wrap:wrap;font-size:13px;color:var(--muted);}
+  .profile-stats b{color:var(--text,inherit);font-size:15px;}
+  .profile-actions{display:flex;gap:12px;align-items:center;margin-top:10px;flex-wrap:wrap;}
+  .store-card{cursor:pointer;}
+  .store-card:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+  .like-btn{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--border);background:#fff;color:var(--muted);border-radius:999px;padding:5px 10px;font-size:12px;font-weight:700;cursor:pointer;}
+  .like-btn.liked{color:#d6336c;border-color:#f3b6cb;background:#fff0f5;}
+  .like-btn:disabled{cursor:default;opacity:.8;}
+  .like-btn.overlay{position:absolute;right:8px;top:8px;box-shadow:0 1px 4px rgba(0,0,0,.12);}
+  @media (max-width:520px){.profile-head{flex-direction:column;text-align:center;}.profile-stats,.profile-actions{justify-content:center;}}
+
+  /* Customizable profile */
+  .profile-cover{max-width:1100px;margin:14px auto 0;aspect-ratio:3/1;border-radius:16px;overflow:hidden;background:var(--accent-soft);}
+  .profile-cover img{width:100%;height:100%;object-fit:cover;display:block;}
+  .profile-head.with-cover{padding-top:0;}
+  .profile-head.with-cover .profile-avatar{margin-top:-40px;}
+  .profile-tagline{font-size:14px;margin:0 0 8px;}
+  .status-chip{font-weight:700;font-size:11px;padding:3px 9px;border-radius:999px;background:var(--accent-soft);color:var(--accent-dark);}
+  .status-chip.away{background:#EEE;color:#666;}
+  .status-chip.commissions{background:#E4F6EC;color:#1F7A55;}
+  .swatch-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+  .swatch{width:30px;height:30px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 1px var(--border);cursor:pointer;}
+  .swatch.active{box-shadow:0 0 0 2px var(--ink);}
+  .shop-strip{display:flex;gap:10px;overflow-x:auto;padding-bottom:6px;}
+  .shop-chip{display:flex;align-items:center;gap:10px;flex-shrink:0;max-width:260px;padding:8px 14px 8px 8px;border:1px solid var(--border);border-radius:999px;background:#fff;text-decoration:none;color:var(--ink);}
+  .shop-chip:hover{box-shadow:var(--shadow);}
+  .shop-chip-avatar{width:36px;height:36px;border-radius:50%;overflow:hidden;background:var(--accent-soft);color:var(--accent-dark);display:flex;align-items:center;justify-content:center;font-weight:800;flex-shrink:0;}
+  .shop-chip-avatar img{width:100%;height:100%;object-fit:cover;}
+  .shop-chip-text{display:flex;flex-direction:column;min-width:0;font-size:13px;line-height:1.2;}
+  .shop-chip-text small{color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .store-seller-link{display:inline-block;color:var(--accent-dark);font-weight:600;text-decoration:none;}
+  .store-seller-link:hover{text-decoration:underline;}

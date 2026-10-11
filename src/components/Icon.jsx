@@ -7,7 +7,7 @@ import {
   ArrowLeft01Icon, ArrowRight01Icon, ArrowUp01Icon, ArrowDown01Icon, Download04Icon,
   Alert02Icon, PencilEdit01Icon, Delete02Icon, Archive02Icon, Call02Icon, Location01Icon,
   Note01Icon, Tick02Icon, RefreshIcon, Search01Icon, Add01Icon, Layers01Icon, Camera01Icon,
-  Undo02Icon, Logout01Icon, GiftIcon, Image01Icon, CheckmarkCircle02Icon, StarIcon, SparklesIcon
+  Undo02Icon, Logout01Icon, GiftIcon, Image01Icon, CheckmarkCircle02Icon, StarIcon, SparklesIcon, FavouriteIcon, UserAdd01Icon, UserCheck01Icon
 } from '@hugeicons/core-free-icons';
 
 // One place to see (and change) every icon in the app.
@@ -23,7 +23,7 @@ const ICONS = {
   pin: Location01Icon, note: Note01Icon, check: Tick02Icon, refresh: RefreshIcon,
   search: Search01Icon, add: Add01Icon, layers: Layers01Icon, camera: Camera01Icon,
   undo: Undo02Icon, logout: Logout01Icon, gift: GiftIcon, image: Image01Icon,
-  success: CheckmarkCircle02Icon, star: StarIcon, sparkles: SparklesIcon
+  success: CheckmarkCircle02Icon, star: StarIcon, sparkles: SparklesIcon, heart: FavouriteIcon, follow: UserAdd01Icon, following: UserCheck01Icon, pin: Location01Icon
 };
 
 export default function Icon({ name, size = 18, className = '', ...rest }) {

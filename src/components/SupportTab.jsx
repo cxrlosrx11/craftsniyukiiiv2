@@ -3,12 +3,14 @@ import Icon from './Icon.jsx';
 import { useShop } from '../lib/ShopContext.jsx';
 import { shopLink } from '../lib/router.js';
 import { fmtDateTime, money } from '../lib/utils.js';
+import { resizeImageFile, coverFromFile } from '../lib/utils.js';
+import { THEMES, THEME_KEYS, STATUSES } from '../lib/themes.js';
 import { emptySupport, loadSupport, saveSupport, restartGoal, loadTips, reviewTip } from '../lib/support.js';
 
 const METHOD_HINTS = ['GCash', 'Maya', 'GoTyme'];
 
 export default function SupportTab() {
-  const { shop } = useShop();
+  const { shop, data } = useShop();
   const cur = shop.currency || 'PHP';
   const slug = shop.showcaseSlug || shop.username;
   const [s, setS] = useState(emptySupport());
@@ -51,6 +53,35 @@ export default function SupportTab() {
     setBusyId('');
   }
 
+  async function pickAvatar(e) {
+    const file = e.target.files && e.target.files[0];
+    e.target.value = '';
+    if (!file) return;
+    const dataUrl = await resizeImageFile(file, 256);
+    if (!dataUrl || dataUrl.length > 150000) { setMsg("That photo couldn't be used. Try a smaller image."); return; }
+    set({ avatar: dataUrl });
+  }
+
+  async function pickCover(e) {
+    const file = e.target.files && e.target.files[0];
+    e.target.value = '';
+    if (!file) return;
+    const dataUrl = await coverFromFile(file);
+    if (!dataUrl) { setMsg("That banner couldn't be used. Try a different image."); return; }
+    set({ cover: dataUrl });
+  }
+
+  const liveProducts = (data.products || []).filter((p) => !p.archived);
+  const nameOf = (id) => { const p = liveProducts.find((x) => x.id === id); return p ? p.name : null; };
+  const featured = s.featured.filter((id) => nameOf(id));
+  const addable = liveProducts.filter((p) => !s.featured.includes(p.id));
+  function moveFeatured(i, d) {
+    const a = [...featured]; const j = i + d;
+    if (j < 0 || j >= a.length) return;
+    [a[i], a[j]] = [a[j], a[i]];
+    set({ featured: a });
+  }
+
   async function newGoal() {
     if (!confirm('Start a new goal? The progress bar goes back to zero. Past tips stay in your list.')) return;
     try { await restartGoal(shop.id); setMsg('New goal started.'); } catch (err) { console.error(err); setMsg("Couldn't restart the goal."); }
@@ -68,7 +99,7 @@ export default function SupportTab() {
   return (
     <div>
       <div className="page-head">
-        <div><h1>Support &amp; goals</h1><p>A tip jar, funding goal and shop profile for <a href={shopLink(slug)} target="_blank" rel="noopener noreferrer">your shop page</a>.</p></div>
+        <div><h1>Profile &amp; support</h1><p>Your public profile, tip jar and funding goal for <a href={shopLink(slug)} target="_blank" rel="noopener noreferrer">your shop page</a>.</p></div>
       </div>
 
       <div className="panel">
@@ -106,6 +137,48 @@ export default function SupportTab() {
       <form onSubmit={save}>
         <div className="panel">
           <div className="panel-head"><div className="panel-title">Shop profile</div></div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 14 }}>
+            <div className="profile-avatar" style={{ width: 72, height: 72, fontSize: 28 }}>
+              {s.avatar ? <img src={s.avatar} alt="Your profile photo" /> : <span>{(shop.name || shop.shopName || '?').toString().charAt(0).toUpperCase()}</span>}
+            </div>
+            <div>
+              <label className="btn btn-ghost btn-sm" style={{ cursor: 'pointer' }}>
+                Choose photo
+                <input type="file" accept="image/*" onChange={pickAvatar} style={{ display: 'none' }} />
+              </label>
+              {s.avatar && <button type="button" className="link-btn" style={{ marginLeft: 8 }} onClick={() => set({ avatar: '' })}>Remove</button>}
+              <div className="hint small">Shown on your public profile. Remember to press Save changes.</div>
+            </div>
+          </div>
+          <div className="form-field"><label>Cover banner</label>
+            {s.cover && <div className="profile-cover" style={{ margin: '0 0 8px' }}><img src={s.cover} alt="Your cover banner" /></div>}
+            <label className="btn btn-ghost btn-sm" style={{ cursor: 'pointer' }}>
+              {s.cover ? 'Change banner' : 'Choose banner'}
+              <input type="file" accept="image/*" onChange={pickCover} style={{ display: 'none' }} />
+            </label>
+            {s.cover && <button type="button" className="link-btn" style={{ marginLeft: 8 }} onClick={() => set({ cover: '' })}>Remove</button>}
+            <div className="hint small">Wide photos work best. It's cropped to a 3:1 strip.</div>
+          </div>
+          <div className="form-field"><label>Tagline</label>
+            <input value={s.tagline} maxLength={80} onChange={(e) => set({ tagline: e.target.value })} placeholder="e.g. Handmade pins and prints from Angeles City" />
+          </div>
+          <div className="form-row">
+            <div className="form-field"><label>Location (optional)</label><input value={s.location} maxLength={60} onChange={(e) => set({ location: e.target.value })} placeholder="e.g. Angeles City, Pampanga" /></div>
+            <div className="form-field"><label>Shop status</label>
+              <select value={s.status} onChange={(e) => set({ status: e.target.value })}>
+                {Object.entries(STATUSES).map(([k, label]) => <option key={k} value={k}>{label}</option>)}
+              </select>
+            </div>
+          </div>
+          <div className="form-field"><label>Page color</label>
+            <div className="swatch-row">
+              {THEME_KEYS.map((k) => (
+                <button key={k} type="button" className={'swatch' + (s.theme === k ? ' active' : '')} title={THEMES[k].label}
+                  style={{ background: THEMES[k].accent }} aria-label={THEMES[k].label} aria-pressed={s.theme === k} onClick={() => set({ theme: k })} />
+              ))}
+              <span className="hint small">{THEMES[s.theme] ? THEMES[s.theme].label : ''}</span>
+            </div>
+          </div>
           <div className="form-field"><label>Announcement banner</label>
             <input value={s.announcement} maxLength={200} onChange={(e) => set({ announcement: e.target.value })} placeholder="e.g. Booth at Komikon this weekend! New pins dropping Friday." />
           </div>
@@ -121,6 +194,36 @@ export default function SupportTab() {
             </div>
           ))}
           {s.links.length < 6 && <button type="button" className="link-btn" onClick={() => set({ links: [...s.links, { label: '', url: '' }] })}>+ Add link</button>}
+        </div>
+
+        <div className="panel">
+          <div className="panel-head"><div className="panel-title">Featured products</div><span className="hint small">{featured.length} of 6</span></div>
+          <p className="hint small" style={{ marginTop: 0 }}>Pick up to 6 products to show at the top of your page. Only ones that are in stock appear to buyers.</p>
+          {featured.map((id, i) => (
+            <div className="ins-row" key={id}>
+              <div className="order-name">{nameOf(id)}</div>
+              <div style={{ display: 'flex', gap: 4 }}>
+                <button type="button" className="icon-btn" title="Move up" disabled={i === 0} onClick={() => moveFeatured(i, -1)}>↑</button>
+                <button type="button" className="icon-btn" title="Move down" disabled={i === featured.length - 1} onClick={() => moveFeatured(i, 1)}>↓</button>
+                <button type="button" className="icon-btn" title="Remove" onClick={() => set({ featured: featured.filter((x) => x !== id) })}><Icon name="trash" size={15} /></button>
+              </div>
+            </div>
+          ))}
+          {featured.length < 6 && addable.length > 0 && (
+            <select value="" onChange={(e) => { if (e.target.value) set({ featured: [...featured, e.target.value] }); }}>
+              <option value="">+ Add a product…</option>
+              {addable.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+            </select>
+          )}
+          {liveProducts.length === 0 && <div className="empty-box">Add products first, then feature your favorites here.</div>}
+        </div>
+
+        <div className="panel">
+          <div className="panel-head"><div className="panel-title">Shipping &amp; shop policies</div></div>
+          <div className="form-field">
+            <textarea rows={4} value={s.policies} maxLength={800} onChange={(e) => set({ policies: e.target.value })}
+              placeholder="e.g. Ships within 3 days. Meet-ups in Angeles City on weekends. No returns on custom orders." />
+          </div>
         </div>
 
         <div className="panel">

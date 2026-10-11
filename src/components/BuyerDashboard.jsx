@@ -3,6 +3,7 @@ import Icon from './Icon.jsx';
 import { sb } from '../lib/supabaseClient';
 import { useShop } from '../lib/ShopContext.jsx';
 import { saveBuyerContact } from '../lib/api.js';
+import { myFollowing, myLikedProducts } from '../lib/social.js';
 import { navigate } from '../lib/router.js';
 import { fmtDateTime, money } from '../lib/utils.js';
 
@@ -24,7 +25,14 @@ export default function BuyerDashboard() {
     setOrders(res.data || []);
     setStatus('ready');
   }
-  useEffect(() => { load(); }, []);
+  const [following, setFollowing] = useState([]);
+  const [liked, setLiked] = useState([]);
+  useEffect(() => {
+    load();
+    myFollowing().then(setFollowing).catch((e) => console.error(e));
+    myLikedProducts().then(setLiked).catch((e) => console.error(e));
+    // eslint-disable-next-line
+  }, []);
 
   async function saveContact(e) {
     e.preventDefault();
@@ -84,6 +92,32 @@ export default function BuyerDashboard() {
               <div className="ins-side">
                 <div className="mono">{money(o.total, o.currency)}</div>
                 <span className={'order-badge ' + o.status.toLowerCase()}>{o.status}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="panel">
+          <div className="panel-head"><div className="panel-title">Shops you follow</div></div>
+          {following.length === 0 ? <div className="empty-box">You're not following any shops yet. Tap Follow on a shop's page.</div> : following.map((f) => (
+            <div className="ins-row" key={f.slug}>
+              <div className="order-name">{f.shopName}</div>
+              <a className="link-btn" href={`#/shop/${encodeURIComponent(f.slug)}`}>Visit</a>
+            </div>
+          ))}
+        </div>
+
+        <div className="panel">
+          <div className="panel-head"><div className="panel-title">Liked items</div></div>
+          {liked.length === 0 ? <div className="empty-box">Tap the heart on a product to save it here.</div> : liked.map((l) => (
+            <div className="ins-row" key={l.shopSlug + l.productId}>
+              <div>
+                <div className="order-name">{l.name}</div>
+                <div className="order-meta">{l.shopName}</div>
+              </div>
+              <div className="ins-side">
+                <div className="mono">{money(l.price, l.currency)}</div>
+                <a className="link-btn" href={`#/shop/${encodeURIComponent(l.shopSlug)}`}>View shop</a>
               </div>
             </div>
           ))}

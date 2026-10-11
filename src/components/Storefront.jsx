@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Icon from './Icon.jsx';
 import { sb } from '../lib/supabaseClient';
 import { useShop } from '../lib/ShopContext.jsx';
@@ -9,6 +9,10 @@ import { money } from '../lib/utils.js';
 import Modal from './Modal.jsx';
 import SimilarProducts from './SimilarProducts.jsx';
 import SupportCard from './SupportCard.jsx';
+import ProfileHeader from './ProfileHeader.jsx';
+import LikeButton from './LikeButton.jsx';
+import { fetchProfile, toggleFollow, toggleLike } from '../lib/social.js';
+import { themeStyle } from '../lib/themes.js';
 
 const PAYMENT_METHODS = ['Cash', 'GCash', 'GoTyme', 'Maya'];
 const AFTER_LOGIN_KEY = 'cy_after_login';
@@ -28,6 +32,62 @@ export default function Storefront({ slug }) {
   const [placing, setPlacing] = useState(false);
   const [checkoutError, setCheckoutError] = useState('');
   const [placed, setPlaced] = useState([]); // [{shopName, total, currency}]
+
+  // Followers/likes per shop, loaded lazily (key = shop slug).
+  const [social, setSocial] = useState({});
+  const socialRef = useRef({});
+  socialRef.current = social;
+  const [followBusy, setFollowBusy] = useState(false);
+  const [directory, setDirectory] = useState([]);
+  useEffect(() => {
+    if (slug) return;
+    sb.rpc('public_shop_directory').then((r) => { if (!r.error && Array.isArray(r.data)) setDirectory(r.data); });
+  }, [slug]);
+  const buyerId = buyer ? buyer.id : null;
+  const loadSocial = useCallback((s) => {
+    fetchProfile(s).then((p) => { if (p) setSocial((m) => ({ ...m, [s]: p })); }).catch((e) => console.error(e));
+  }, []);
+  // Reload when the shop page changes or when someone logs in/out (so hearts and Follow match the account).
+  useEffect(() => {
+    const slugs = new Set(Object.keys(socialRef.current));
+    if (slug) slugs.add(slug);
+    slugs.forEach(loadSocial);
+  }, [slug, buyerId, loadSocial]);
+
+  function requireBuyer(returnSlug) {
+    try { localStorage.setItem('cy_return_to', '/shop/' + encodeURIComponent(returnSlug)); } catch (e) { /* ignore */ }
+    setAuthRole('buyer'); setAuthView('login'); navigate('/login');
+  }
+
+  async function follow(s) {
+    if (shop) return;
+    if (!buyer) { requireBuyer(s); return; }
+    setFollowBusy(true);
+    try {
+      const r = await toggleFollow(s);
+      setSocial((m) => ({ ...m, [s]: { ...m[s], following: r.following, followers: r.followers } }));
+    } catch (err) { alert(err.message || 'Could not update your follow. Please try again.'); }
+    setFollowBusy(false);
+  }
+
+  async function like(p) {
+    if (shop) return;
+    if (!buyer) { requireBuyer(p.shopSlug); return; }
+    try {
+      const r = await toggleLike(p.shopSlug, p.id);
+      setSocial((m) => {
+        const cur = m[p.shopSlug] || { likeCounts: {}, myLikes: [], totalLikes: 0 };
+        const counts = { ...cur.likeCounts, [p.id]: r.count };
+        const mine = r.liked ? Array.from(new Set([...cur.myLikes, p.id])) : cur.myLikes.filter((x) => x !== p.id);
+        const total = Object.values(counts).reduce((a, b) => a + b, 0);
+        return { ...m, [p.shopSlug]: { ...cur, likeCounts: counts, myLikes: mine, totalLikes: total } };
+      });
+    } catch (err) { alert(err.message || 'Could not save your like. Please try again.'); }
+  }
+  const likeInfo = (p) => {
+    const s = social[p.shopSlug];
+    return { liked: !!(s && s.myLikes.includes(p.id)), count: (s && s.likeCounts[p.id]) || 0 };
+  };
 
   async function load() {
     setStatus('loading');
@@ -55,6 +115,12 @@ export default function Storefront({ slug }) {
     return Array.from(m, ([s, name]) => ({ slug: s, name }));
   }, [items]);
 
+  const featuredItems = useMemo(() => {
+    const prof = slug && social[slug];
+    if (!prof) return [];
+    return (prof.featured || []).map((id) => items.find((i) => i.id === id && i.shopSlug === slug)).filter(Boolean);
+  }, [slug, social, items]);
+
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     return items.filter((i) =>
@@ -75,7 +141,8 @@ export default function Storefront({ slug }) {
 
   const heading = slug && items[0] ? items[0].shopName : 'Crafts ni Yukiii';
 
-  function openProduct(p) { setQty(1); setOpen(p); }
+  function openProduct(p) {
+    if (!socialRef.current[p.shopSlug]) loadSocial(p.shopSlug); setQty(1); setOpen(p); }
   function addToCart() {
     cart.add(open, qty);
     setOpen(null);
@@ -128,8 +195,27 @@ export default function Storefront({ slug }) {
 
   const firstName = buyer ? (buyer.fullName || '').split(' ')[0] : '';
 
+  const renderCard = (p, prefix = '') => (
+            <div key={prefix + p.shopSlug + p.id} className="store-card" role="button" tabIndex={0}
+              onClick={() => openProduct(p)}
+              onKeyDown={(e) => { if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); openProduct(p); } }}>
+              <div className="store-media">
+                {p.image ? <img src={p.image} alt={p.name} loading="lazy" /> : <Icon name="image" size={40} />}
+                {p.stock <= 3 && <span className="store-badge">Only {p.stock} left</span>}
+                {slug && social[slug] && <LikeButton overlay {...likeInfo(p)} disabled={!!shop} onClick={() => like(p)} />}
+              </div>
+              <div className="store-info">
+                <div className="store-name">{p.name}</div>
+                {!slug && (
+                  <a className="store-seller store-seller-link" href={`#/shop/${encodeURIComponent(p.shopSlug)}`} onClick={(e) => e.stopPropagation()}>{p.shopName}</a>
+                )}
+                <div className="store-price mono">{money(p.price, p.currency)}</div>
+              </div>
+            </div>
+  );
+
   return (
-    <div className="store">
+    <div className="store" style={slug && social[slug] ? themeStyle(social[slug].theme) : undefined}>
       <header className="store-nav">
         <a className="store-brand" href="#/">
           <span className="brand-logo">CY</span>
@@ -155,14 +241,49 @@ export default function Storefront({ slug }) {
         </div>
       </header>
 
-      <section className="store-hero">
-        <h1>{slug ? heading : 'Shop handmade crafts'}</h1>
-        <p>{slug ? 'Browse what is in stock right now.' : 'Pins, prints, charms and more — fresh from our small-shop sellers.'}</p>
-        {slug && <a className="link-btn" href="#/"><Icon name="back" size={13} /> All shops</a>}
-      </section>
+      {slug && social[slug] ? (
+        <ProfileHeader
+          profile={social[slug]}
+          isSeller={!!shop}
+          isOwnShop={!!shop && (shop.showcaseSlug || shop.username) === slug}
+          busy={followBusy}
+          onFollow={() => follow(slug)}
+        />
+      ) : (
+        <section className="store-hero">
+          <h1>{slug ? heading : 'Shop handmade crafts'}</h1>
+          <p>{slug ? 'Browse what is in stock right now.' : 'Pins, prints, charms and more — fresh from our small-shop sellers.'}</p>
+          {slug && <a className="link-btn" href="#/"><Icon name="back" size={13} /> All shops</a>}
+        </section>
+      )}
 
       <div className="store-body">
         {slug && <SupportCard slug={slug} />}
+        {slug && featuredItems.length > 0 && (
+          <div style={{ marginBottom: 18 }}>
+            <div className="side-section" style={{ padding: '0 0 8px' }}>Featured</div>
+            <div className="store-grid">{featuredItems.map((p) => renderCard(p, 'f-'))}</div>
+          </div>
+        )}
+        {slug && social[slug] && social[slug].policies && (
+          <details className="panel" style={{ marginBottom: 18 }}>
+            <summary style={{ cursor: 'pointer', fontWeight: 700 }}>Shipping &amp; shop policies</summary>
+            <p style={{ whiteSpace: 'pre-line', margin: '10px 0 0' }}>{social[slug].policies}</p>
+          </details>
+        )}
+        {!slug && directory.length > 0 && (
+          <div style={{ marginBottom: 14 }}>
+            <div className="side-section" style={{ padding: '0 0 8px' }}>Meet the shops</div>
+            <div className="shop-strip">
+              {directory.map((d) => (
+                <a key={d.slug} className="shop-chip" href={`#/shop/${encodeURIComponent(d.slug)}`}>
+                  <span className="shop-chip-avatar">{d.avatar ? <img src={d.avatar} alt="" /> : (d.shopName || '?').charAt(0).toUpperCase()}</span>
+                  <span className="shop-chip-text"><b>{d.shopName}</b>{d.tagline && <small>{d.tagline}</small>}</span>
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
         <div className="store-filters">
           <input className="list-search" placeholder="Search products…" value={search} onChange={(e) => setSearch(e.target.value)} />
           {!slug && sellers.length > 1 && (
@@ -190,19 +311,7 @@ export default function Storefront({ slug }) {
         )}
 
         <div className="store-grid">
-          {filtered.map((p) => (
-            <button key={p.shopSlug + p.id} className="store-card" onClick={() => openProduct(p)}>
-              <div className="store-media">
-                {p.image ? <img src={p.image} alt={p.name} loading="lazy" /> : <Icon name="image" size={40} />}
-                {p.stock <= 3 && <span className="store-badge">Only {p.stock} left</span>}
-              </div>
-              <div className="store-info">
-                <div className="store-name">{p.name}</div>
-                {!slug && <div className="store-seller">{p.shopName}</div>}
-                <div className="store-price mono">{money(p.price, p.currency)}</div>
-              </div>
-            </button>
-          ))}
+          {filtered.map((p) => renderCard(p))}
         </div>
       </div>
 
@@ -211,7 +320,10 @@ export default function Storefront({ slug }) {
           <div className="store-detail-media">
             {open.image ? <img src={open.image} alt={open.name} /> : <Icon name="image" size={64} />}
           </div>
-          <div className="store-price mono" style={{ fontSize: 22, margin: '12px 0 4px' }}>{money(open.price, open.currency)}</div>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '12px 0 4px' }}>
+            <div className="store-price mono" style={{ fontSize: 22 }}>{money(open.price, open.currency)}</div>
+            {social[open.shopSlug] && <LikeButton {...likeInfo(open)} disabled={!!shop} onClick={() => like(open)} />}
+          </div>
           <p className="hint" style={{ margin: '0 0 14px' }}>
             {[open.category, open.ip].filter(Boolean).join(' · ')}<br />
             Sold by <a href={`#/shop/${encodeURIComponent(open.shopSlug)}`} onClick={() => setOpen(null)}><b>{open.shopName}</b></a>

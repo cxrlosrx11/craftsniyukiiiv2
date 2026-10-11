@@ -1,10 +1,25 @@
 import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { sb } from './supabaseClient';
-import { loadShopProfile, loadShopData, saveShopData, saveShopProfile, ensureBuyerProfile } from './api';
+import { loadShopProfile, loadShopData, saveShopData, saveShopProfile, ensureBuyerProfile, shopRowToShop } from './api';
 import { defaultShopData } from './constants';
 import { uid } from './utils';
 
 const ShopContext = createContext(null);
+
+// Turns Supabase auth errors into something a person can act on.
+function friendlyAuthError(error) {
+  const raw = (error && error.message) || '';
+  const m = raw.toLowerCase();
+  console.error('Sign-up failed:', error);
+  if (m.includes('rate limit') || m.includes('security purposes')) {
+    return 'Too many sign-up emails were sent recently, so Supabase is pausing new sign-ups. Wait a while (up to an hour) and try again.';
+  }
+  if (!raw || raw === '{}') {
+    const code = error && error.status ? ` Error code: ${error.status}${error.code ? ' / ' + error.code : ''}.` : '';
+    return 'The sign-up server refused the request without saying why.' + code + ' Check Supabase > Logs > Auth for the real reason.';
+  }
+  return raw;
+}
 
 // Which kind of account is this? Sign-up stamps role = 'buyer' | 'seller' on the
 // auth user. A buyer account is NEVER treated as a seller, even if a stray row
@@ -133,7 +148,7 @@ export function ShopProvider({ children }) {
       email, password,
       options: { data: { role: 'buyer', full_name: fullName.trim(), phone: phone.trim() } }
     });
-    if (res.error) throw { friendly: res.error.message || 'Could not create your account.' };
+    if (res.error) throw { friendly: friendlyAuthError(res.error) };
     // Supabase hides "already registered" behind a fake user with no identities.
     if (res.data.user && Array.isArray(res.data.user.identities) && res.data.user.identities.length === 0) {
       throw { friendly: 'That email is already registered (buyer and seller accounts cannot share one email). Log in instead, or use a different email.' };
@@ -141,7 +156,12 @@ export function ShopProvider({ children }) {
     if (!res.data.user || !res.data.session) {
       throw { isNotice: true, friendly: 'Check your email to confirm your account, then log in.' };
     }
-    const b = await ensureBuyerProfile(res.data.user);
+    let b;
+    try {
+      b = await ensureBuyerProfile(res.data.user, { throwOnError: true });
+    } catch (err) {
+      throw { friendly: `Your account was created, but the buyer profile could not be saved (${(err && err.message) || 'unknown error'}). Please report this message.` };
+    }
     if (!b) throw { friendly: 'Your account was created, but the buyer profile could not be saved. Try logging in.' };
     setBuyer(b);
   }, []);
@@ -150,26 +170,35 @@ export function ShopProvider({ children }) {
     if (!shopName || !username || !email || !password) {
       throw { friendly: 'Fill in every field to create your shop.' };
     }
-    const signUpRes = await sb.auth.signUp({ email, password, options: { data: { role: 'seller' } } });
-    if (signUpRes.error) throw { friendly: signUpRes.error.message || 'Could not create your account.' };
+    const uname = username.trim().toLowerCase();
+    // Friendly check before sign-up; the database also enforces unique usernames.
+    const taken = await sb.rpc('email_for_username', { uname });
+    if (!taken.error && taken.data) throw { friendly: 'That username is already taken. Pick another one.' };
+
+    // The shop details travel with the account so the database can create the shop
+    // right away (this is what makes sign-up work even when email confirmation is on).
+    const signUpRes = await sb.auth.signUp({
+      email, password,
+      options: { data: { role: 'seller', shop_name: shopName.trim(), username: uname } }
+    });
+    if (signUpRes.error) throw { friendly: friendlyAuthError(signUpRes.error) };
     if (signUpRes.data.user && Array.isArray(signUpRes.data.user.identities) && signUpRes.data.user.identities.length === 0) {
       throw { friendly: 'That email is already registered (buyer and seller accounts cannot share one email). Log in instead, or use a different email.' };
     }
     const userId = signUpRes.data.user && signUpRes.data.user.id;
-    if (!userId) {
+    if (!userId || !signUpRes.data.session) {
       throw { isNotice: true, friendly: 'Check your email to confirm your account, then log in.' };
     }
-    const insertRes = await sb.from('shops').insert({
-      id: userId, shop_name: shopName, username: username.trim().toLowerCase(),
-      email, currency: 'PHP'
-    }).select().maybeSingle();
-    if (insertRes.error) throw { friendly: insertRes.error.message || 'Could not create your shop profile.' };
-    await sb.from('shop_data').insert({ shop_id: userId, data: defaultShopData() });
-    const shopProfile = insertRes.data ? {
-      id: insertRes.data.id, shopName: insertRes.data.shop_name, username: insertRes.data.username,
-      email: insertRes.data.email, currency: insertRes.data.currency, showcaseSlug: insertRes.data.showcase_slug,
-      createdAt: insertRes.data.created_at
-    } : null;
+    // Normally the database has already created the shop; fall back to creating it here.
+    let shopProfile = await loadShopProfile(userId);
+    if (!shopProfile) {
+      const insertRes = await sb.from('shops').insert({
+        id: userId, shop_name: shopName.trim(), username: uname, email, currency: 'PHP'
+      }).select().maybeSingle();
+      if (insertRes.error) throw { friendly: insertRes.error.message || 'Could not create your shop profile.' };
+      await sb.from('shop_data').insert({ shop_id: userId, data: defaultShopData() });
+      shopProfile = insertRes.data ? shopRowToShop(insertRes.data) : null;
+    }
     setShop(shopProfile);
     setData(defaultShopData());
     setDataLoaded(true);

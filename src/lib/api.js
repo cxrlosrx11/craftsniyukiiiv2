@@ -65,16 +65,24 @@ export function buyerRowToBuyer(row) {
 // Loads the buyer profile. If the account was created as a buyer but the profile
 // row doesn't exist yet (e.g. email confirmation was required at sign-up), it is
 // created now from the details saved with the account.
-export async function ensureBuyerProfile(user) {
+export async function ensureBuyerProfile(user, { throwOnError = false } = {}) {
   const res = await sb.from('buyers').select('*').eq('id', user.id).maybeSingle();
-  if (res.error) return null;
+  if (res.error) {
+    console.error('Reading buyer profile failed:', res.error);
+    if (throwOnError) throw res.error;
+    return null;
+  }
   if (res.data) return buyerRowToBuyer(res.data);
   const meta = user.user_metadata || {};
   if (meta.role !== 'buyer') return null;
   const ins = await sb.from('buyers').insert({
     id: user.id, full_name: meta.full_name || 'Buyer', email: user.email, phone: meta.phone || null
   }).select().maybeSingle();
-  if (ins.error || !ins.data) return null;
+  if (ins.error || !ins.data) {
+    console.error('Creating buyer profile failed:', ins.error);
+    if (throwOnError) throw ins.error || new Error('The profile was saved but could not be read back (check the buyers table read policy).');
+    return null;
+  }
   return buyerRowToBuyer(ins.data);
 }
 

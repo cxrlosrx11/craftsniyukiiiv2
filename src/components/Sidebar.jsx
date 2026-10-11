@@ -29,7 +29,7 @@ const NAV_SECTIONS = [
     links: [
       { tab: 'showcase', icon: 'store', label: 'Showcase' },
       { tab: 'invite', icon: 'invite', label: 'Invite buyers' },
-      { tab: 'support', icon: 'gift', label: 'Support & goals' },
+      { tab: 'support', icon: 'gift', label: 'Profile & support' },
       { tab: 'feedback', icon: 'feedback', label: 'Feedback' },
       { tab: 'import', icon: 'import', label: 'Import CSV' },
       { tab: 'backup', icon: 'backup', label: 'Backup & restore' }
