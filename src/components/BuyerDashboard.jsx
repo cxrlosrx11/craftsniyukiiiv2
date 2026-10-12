@@ -4,6 +4,7 @@ import { sb } from '../lib/supabaseClient';
 import { useShop } from '../lib/ShopContext.jsx';
 import { saveBuyerContact } from '../lib/api.js';
 import { myFollowing, myLikedProducts } from '../lib/social.js';
+import { myReservations, cancelReservation, fmtRange, itemsText } from '../lib/pickups.js';
 import { navigate } from '../lib/router.js';
 import { fmtDateTime, money } from '../lib/utils.js';
 
@@ -27,10 +28,13 @@ export default function BuyerDashboard() {
   }
   const [following, setFollowing] = useState([]);
   const [liked, setLiked] = useState([]);
+  const [pickups, setPickups] = useState([]);
+  const reloadPickups = () => myReservations().then(setPickups).catch((e) => console.error(e));
   useEffect(() => {
     load();
     myFollowing().then(setFollowing).catch((e) => console.error(e));
     myLikedProducts().then(setLiked).catch((e) => console.error(e));
+    reloadPickups();
     // eslint-disable-next-line
   }, []);
 
@@ -96,6 +100,29 @@ export default function BuyerDashboard() {
             </div>
           ))}
         </div>
+
+        {pickups.length > 0 && (
+          <div className="panel">
+            <div className="panel-head"><div className="panel-title">Convention pickups</div></div>
+            {pickups.map((r) => (
+              <div className="ins-row" key={r.id} style={{ alignItems: 'flex-start' }}>
+                <div style={{ minWidth: 0 }}>
+                  <div className="order-name"><span className="mono">{r.code}</span> · {r.shopName}</div>
+                  <div className="order-meta">{r.eventName} · {fmtRange(r.startsOn, r.endsOn)}{r.booth ? ` · Booth ${r.booth}` : ''}</div>
+                  <div className="order-meta">{itemsText(r.items)} · {money(r.total, r.currency)} at the booth</div>
+                </div>
+                <div className="ins-side">
+                  <span className={'order-badge ' + (r.status === 'Ready' || r.status === 'PickedUp' ? 'confirmed' : r.status === 'Reserved' ? 'pending' : 'declined')}>
+                    {r.status === 'PickedUp' ? 'Picked up' : r.status === 'NoShow' ? 'Missed' : r.status}
+                  </span>
+                  {(r.status === 'Reserved' || r.status === 'Ready') && (
+                    <div><button className="link-btn" onClick={async () => { if (confirm('Cancel this reservation?')) { try { await cancelReservation(r.id); } catch (e) { alert(e.message); } reloadPickups(); } }}>Cancel</button></div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
 
         <div className="panel">
           <div className="panel-head"><div className="panel-title">Shops you follow</div></div>

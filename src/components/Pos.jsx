@@ -1,7 +1,8 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import Icon from './Icon.jsx';
 import { useShop } from '../lib/ShopContext.jsx';
 import { money, uid } from '../lib/utils.js';
+import { myShopHolds } from '../lib/pickups.js';
 
 function bulkDiscountQty(cart) {
   return (cart || []).reduce((a, l) => a + (l.category === 'Pins' ? l.qty : 0), 0);
@@ -32,6 +33,11 @@ export default function Pos() {
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
 
+  // Pieces promised to buyers for pickup are not for sale at the booth.
+  const [holds, setHolds] = useState({});
+  useEffect(() => { myShopHolds().then((h) => setHolds(h || {})).catch(() => {}); }, []);
+  const availOf = (p) => Math.max(0, p.stock - (holds[p.id] || 0));
+
   const cart = mode === 'sell' ? qsCart : rsCart;
   const setCart = mode === 'sell' ? setQsCart : setRsCart;
 
@@ -52,7 +58,7 @@ export default function Pos() {
     if (mode === 'sell') {
       if (p.archived) return;
       const already = existing ? existing.qty : 0;
-      if (already >= p.stock) { setErrorMsg(`No more stock available for "${p.name}".`); return; }
+      if (already >= availOf(p)) { setErrorMsg(`No more stock available for "${p.name}"${holds[p.id] ? ` (${holds[p.id]} held for pickups)` : ''}.`); return; }
       setErrorMsg('');
       if (existing) setCart(cart.map((l) => l.productId === p.id ? { ...l, qty: l.qty + 1 } : l));
       else setCart([...cart, { productId: p.id, name: p.name, price: p.price, cost: p.cost, image: p.image, category: p.category, qty: 1 }]);
@@ -70,7 +76,7 @@ export default function Pos() {
     if (newQty < 1) { setCart(cart.filter((l) => l.productId !== productId)); return; }
     if (mode === 'sell') {
       const p = data.products.find((x) => x.id === productId);
-      if (p && newQty > p.stock) { setErrorMsg(`Only ${p.stock} in stock for "${p.name}".`); return; }
+      if (p && newQty > availOf(p)) { setErrorMsg(`Only ${availOf(p)} available for "${p.name}"${holds[p.id] ? ` (${holds[p.id]} held for pickups)` : ''}.`); return; }
     }
     setErrorMsg('');
     setCart(cart.map((l) => l.productId === productId ? { ...l, qty: newQty } : l));
@@ -164,7 +170,7 @@ export default function Pos() {
                   {p.image ? <img src={p.image} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <Icon name="image" size={22} />}
                 </div>
                 <div style={{ fontSize: 12.5, fontWeight: 700 }}>{p.name}</div>
-                <div className="mono" style={{ fontSize: 12, color: 'var(--muted)' }}>{money(p.price, cur)} · {p.stock} left</div>
+                <div className="mono" style={{ fontSize: 12, color: 'var(--muted)' }}>{money(p.price, cur)} · {p.stock} left{mode === 'sell' && holds[p.id] ? ` · ${holds[p.id]} held` : ''}</div>
               </button>
             ))}
           </div>
