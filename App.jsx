@@ -17,6 +17,8 @@ import BackupTab from './components/BackupTab.jsx';
 import Pos from './components/Pos.jsx';
 import Insights from './components/Insights.jsx';
 import SupportTab from './components/SupportTab.jsx';
+import ConventionMode from './components/ConventionMode.jsx';
+import CustomOrders from './components/CustomOrders.jsx';
 import Storefront from './components/Storefront.jsx';
 import Orders from './components/Orders.jsx';
 import BuyerOrders from './components/BuyerOrders.jsx';
@@ -92,6 +94,8 @@ export default function App() {
     case 'breakdown': content = <Breakdown />; break;
     case 'insights': content = <Insights />; break;
     case 'support': content = <SupportTab />; break;
+    case 'pickups': content = <ConventionMode />; break;
+    case 'custom': content = <CustomOrders />; break;
     case 'showcase': content = <Showcase />; break;
     case 'invite': content = <Invite />; break;
     case 'feedback': content = <Feedback />; break;
