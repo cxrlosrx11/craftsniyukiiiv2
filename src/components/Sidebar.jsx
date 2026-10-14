@@ -15,6 +15,8 @@ const NAV_SECTIONS = [
       { tab: 'conventions', icon: 'convention', label: 'Conventions' },
       { tab: 'pickups', icon: 'convention', label: 'Convention Mode' },
       { tab: 'custom', icon: 'layers', label: 'Custom orders' },
+      { tab: 'collections', icon: 'album', label: 'Collections' },
+      { tab: 'wrapped', icon: 'award', label: 'Wrapped' },
       { tab: 'costs', icon: 'expenses', label: 'Expenses' }
     ]
   },

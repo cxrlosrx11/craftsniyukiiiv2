@@ -664,3 +664,9 @@
   .shop-chip-text small{color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   .store-seller-link{display:inline-block;color:var(--accent-dark);font-weight:600;text-decoration:none;}
   .store-seller-link:hover{text-decoration:underline;}
+
+  /* Wrapped */
+  .wrapped-layout{display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap;}
+  .wrapped-controls{flex:1 1 280px;max-width:420px;}
+  .wrapped-preview{flex:1 1 280px;display:flex;justify-content:center;}
+  .wrapped-canvas{width:100%;height:auto;border-radius:18px;box-shadow:var(--shadow);background:var(--accent-softer);}
