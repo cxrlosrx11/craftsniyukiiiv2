@@ -10,6 +10,7 @@ import Modal from './Modal.jsx';
 import SimilarProducts from './SimilarProducts.jsx';
 import SupportCard from './SupportCard.jsx';
 import EventsCard from './EventsCard.jsx';
+import CustomOffersCard from './CustomOffersCard.jsx';
 import ProfileHeader from './ProfileHeader.jsx';
 import LikeButton from './LikeButton.jsx';
 import { fetchProfile, toggleFollow, toggleLike } from '../lib/social.js';
@@ -261,6 +262,7 @@ export default function Storefront({ slug }) {
       <div className="store-body">
         {slug && <SupportCard slug={slug} />}
         {slug && <EventsCard slug={slug} items={items.filter((i) => i.shopSlug === slug)} isSeller={!!shop} />}
+        {slug && <CustomOffersCard slug={slug} isSeller={!!shop} />}
         {slug && featuredItems.length > 0 && (
           <div style={{ marginBottom: 18 }}>
             <div className="side-section" style={{ padding: '0 0 8px' }}>Featured</div>

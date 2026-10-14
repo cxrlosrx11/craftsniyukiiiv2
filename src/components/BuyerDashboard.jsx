@@ -5,6 +5,7 @@ import { useShop } from '../lib/ShopContext.jsx';
 import { saveBuyerContact } from '../lib/api.js';
 import { myFollowing, myLikedProducts } from '../lib/social.js';
 import { myReservations, cancelReservation, fmtRange, itemsText } from '../lib/pickups.js';
+import { myRequests, cancelRequest, selectionLines, STATUS_LABEL } from '../lib/customOrders.js';
 import { navigate } from '../lib/router.js';
 import { fmtDateTime, money } from '../lib/utils.js';
 
@@ -30,11 +31,14 @@ export default function BuyerDashboard() {
   const [liked, setLiked] = useState([]);
   const [pickups, setPickups] = useState([]);
   const reloadPickups = () => myReservations().then(setPickups).catch((e) => console.error(e));
+  const [customReqs, setCustomReqs] = useState([]);
+  const reloadCustom = () => myRequests().then(setCustomReqs).catch((e) => console.error(e));
   useEffect(() => {
     load();
     myFollowing().then(setFollowing).catch((e) => console.error(e));
     myLikedProducts().then(setLiked).catch((e) => console.error(e));
     reloadPickups();
+    reloadCustom();
     // eslint-disable-next-line
   }, []);
 
@@ -100,6 +104,32 @@ export default function BuyerDashboard() {
             </div>
           ))}
         </div>
+
+        {customReqs.length > 0 && (
+          <div className="panel">
+            <div className="panel-head"><div className="panel-title">Custom requests</div></div>
+            {customReqs.map((r) => (
+              <div className="ins-row" key={r.id} style={{ alignItems: 'flex-start' }}>
+                <div style={{ minWidth: 0 }}>
+                  <div className="order-name"><span className="mono">{r.code}</span> · {r.title} × {r.qty}</div>
+                  <div className="order-meta">{r.shopName}</div>
+                  {selectionLines(r.selections).map((line, i) => <div className="order-meta" key={i}>{line}</div>)}
+                  <div className="order-meta">
+                    {r.quotedTotal != null ? `Final price ${money(r.quotedTotal, r.currency)}` : `Estimate ${money(r.estTotal, r.currency)}`}
+                    {r.eta ? ` · ready by ${r.eta}` : ''}
+                  </div>
+                  {r.sellerNote && <div className="hint small">Seller: "{r.sellerNote}"</div>}
+                </div>
+                <div className="ins-side">
+                  <span className={'order-badge ' + (r.status === 'Requested' ? 'pending' : ['Declined', 'Cancelled'].includes(r.status) ? 'declined' : 'confirmed')}>{STATUS_LABEL[r.status]}</span>
+                  {(r.status === 'Requested' || r.status === 'Accepted') && (
+                    <div><button className="link-btn" onClick={async () => { if (confirm('Cancel this request?')) { try { await cancelRequest(r.id); } catch (e) { alert(e.message); } reloadCustom(); } }}>Cancel</button></div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
 
         {pickups.length > 0 && (
           <div className="panel">

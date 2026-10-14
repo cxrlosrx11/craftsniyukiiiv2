@@ -14,6 +14,7 @@ const NAV_SECTIONS = [
       { tab: 'orders', icon: 'orders', label: 'Online orders' },
       { tab: 'conventions', icon: 'convention', label: 'Conventions' },
       { tab: 'pickups', icon: 'convention', label: 'Convention Mode' },
+      { tab: 'custom', icon: 'layers', label: 'Custom orders' },
       { tab: 'costs', icon: 'expenses', label: 'Expenses' }
     ]
   },
@@ -43,6 +44,7 @@ export default function Sidebar({ sellerTab, setSellerTab, navOpen, setNavOpen }
   const [pending, setPending] = useState(0);
   const [pendingTips, setPendingTips] = useState(0);
   const [newReservations, setNewReservations] = useState(0);
+  const [newCustom, setNewCustom] = useState(0);
   useEffect(() => {
     let alive = true;
     async function check() {
@@ -52,6 +54,8 @@ export default function Sidebar({ sellerTab, setSellerTab, navOpen, setNavOpen }
       if (alive && !tipRes.error) setPendingTips(tipRes.count || 0);
       const resRes = await sb.from('reservations').select('id', { count: 'exact', head: true }).eq('shop_id', shop.id).eq('status', 'Reserved');
       if (alive && !resRes.error) setNewReservations(resRes.count || 0);
+      const cusRes = await sb.from('custom_requests').select('id', { count: 'exact', head: true }).eq('shop_id', shop.id).eq('status', 'Requested');
+      if (alive && !cusRes.error) setNewCustom(cusRes.count || 0);
     }
     check();
     const t = setInterval(check, 60000);
@@ -94,6 +98,7 @@ export default function Sidebar({ sellerTab, setSellerTab, navOpen, setNavOpen }
               {link.tab === 'orders' && pending > 0 && <span className="nav-badge">{pending}</span>}
               {link.tab === 'support' && pendingTips > 0 && <span className="nav-badge">{pendingTips}</span>}
               {link.tab === 'pickups' && newReservations > 0 && <span className="nav-badge">{newReservations}</span>}
+              {link.tab === 'custom' && newCustom > 0 && <span className="nav-badge">{newCustom}</span>}
             </button>
           ))}
         </div>
