@@ -5,6 +5,7 @@ import { money, fmtDateTime, toPHP, fromPHP } from '../lib/utils.js';
 import { CURRENCIES } from '../lib/constants.js';
 import Achievements from './Achievements.jsx';
 import Audience from './Audience.jsx';
+import GettingStarted from './GettingStarted.jsx';
 
 export default function Overview({ goTo }) {
   const { shop, data, updateShopProfile } = useShop();
@@ -43,6 +44,7 @@ export default function Overview({ goTo }) {
 
       <div className="ov-grid">
         <div className="ov-main">
+          <GettingStarted goTo={goTo} />
           <div className="stat-grid">
             <div className="stat-card">
               <div className="stat-label">Total revenue</div>

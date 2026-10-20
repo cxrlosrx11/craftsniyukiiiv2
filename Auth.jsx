@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import Icon from './Icon.jsx';
 import { useShop } from '../lib/ShopContext.jsx';
+import Logo from './Logo.jsx';
 
 export default function Auth() {
   const { authView, setAuthView, authRole, setAuthRole, login, signup, signupBuyer } = useShop();
@@ -46,13 +47,13 @@ export default function Auth() {
 
   function passwordField(name) {
     return (
-      <div style={{ position: 'relative' }}>
-        <input name={name} type={pwVisible ? 'text' : 'password'} required minLength={6} />
+      <div className="pw-wrap">
+        <input name={name} type={pwVisible ? 'text' : 'password'} required minLength={6} autoComplete={authView === 'login' ? 'current-password' : 'new-password'} />
         <button
           type="button"
-          className="link-btn"
-          style={{ position: 'absolute', right: 8, top: 8, fontSize: 12 }}
+          className="link-btn pw-toggle"
           onClick={() => setPwVisible((v) => !v)}
+          aria-label={pwVisible ? 'Hide password' : 'Show password'}
         >
           {pwVisible ? 'Hide' : 'Show'}
         </button>
@@ -61,13 +62,25 @@ export default function Auth() {
   }
 
   return (
-    <div className="auth-shell">
-      <div className="auth-card">
-        <a className="link-btn auth-back" href="#/"><Icon name="back" size={14} /> Back to shop</a>
-        <div className="auth-brand">
-          <div className="auth-logo">CY</div>
-          <div className="auth-brand-text">Crafts ni Yukiii</div>
+    <div className="auth-split">
+      <aside className="auth-aside">
+        <Logo size={44} href="#/" />
+        <div>
+          <h2>Small shops,<br />big hearts.</h2>
+          <p>Discover handmade pins, prints and charms, or run your own shop with sales, orders and convention tools in one place.</p>
+          <ul className="auth-perks">
+            <li><Icon name="heart" size={16} /> Follow your favorite makers</li>
+            <li><Icon name="album" size={16} /> Collect whole sets and track them</li>
+            <li><Icon name="calendar" size={16} /> Reserve items for pickup at conventions</li>
+          </ul>
         </div>
+        <div style={{ fontSize: 13, opacity: .8 }}>Made with care for small-shop sellers</div>
+      </aside>
+      <div className="auth-main">
+      <div className="auth-card">
+        <div className="auth-mobile-brand"><Logo size={36} href="#/" /></div>
+        <a className="link-btn auth-back" href="#/"><Icon name="back" size={14} /> Back to shop</a>
+        <h1 className="auth-title">{authView === 'login' ? 'Welcome back' : 'Create your account'}</h1>
         <div className="tab-switch">
           <button
             type="button"
@@ -98,7 +111,7 @@ export default function Auth() {
             </div>
             {errorMsg && <div className="form-error">{errorMsg}</div>}
             {successMsg && <div className="form-success">{successMsg}</div>}
-            <button className="btn btn-primary btn-block" type="submit" disabled={busy}>
+            <button className="btn btn-primary btn-block" type="submit" disabled={busy} aria-busy={busy}>
               {busy ? 'Logging in…' : 'Log in'}
             </button>
           </form>
@@ -147,6 +160,7 @@ export default function Auth() {
             </button>
           </form>
         )}
+      </div>
       </div>
     </div>
   );

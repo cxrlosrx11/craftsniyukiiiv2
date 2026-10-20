@@ -2,17 +2,44 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Crafts ni Yukiii — Shop Dashboard</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Crafts ni Yukiii</title>
+<meta name="description" content="Shop handmade pins, prints, charms and more from small-shop sellers, or run your own shop with sales, orders and convention tools." />
+<meta name="theme-color" content="#EC4899" />
+<meta property="og:title" content="Crafts ni Yukiii" />
+<meta property="og:description" content="Handmade crafts from small-shop sellers." />
+<meta property="og:type" content="website" />
+<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+<link rel="manifest" href="/manifest.webmanifest" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link
   href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@500&display=swap"
   rel="stylesheet"
 />
+<style>
+  /* Shown instantly, before the app code has downloaded */
+  html,body{margin:0;background:#FFF7FA;}
+  .boot{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;font-family:Inter,system-ui,sans-serif;color:#C22B75;}
+  .boot svg{width:72px;height:72px;filter:drop-shadow(0 10px 18px rgba(236,72,153,.28));animation:bootfloat 1.8s ease-in-out infinite;}
+  .boot b{font-size:18px;font-weight:800;letter-spacing:-.01em;color:#2A1620;}
+  @keyframes bootfloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+  @media (prefers-reduced-motion:reduce){.boot svg{animation:none}}
+</style>
 </head>
 <body>
-<div id="root"></div>
+<div id="root">
+  <div class="boot" role="status" aria-label="Loading Crafts ni Yukiii">
+    <svg viewBox="0 0 64 64" aria-hidden="true">
+      <defs><linearGradient id="bg" x1="8" y1="4" x2="58" y2="62" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#F472B6"/><stop offset=".55" stop-color="#EC4899"/><stop offset="1" stop-color="#BE185D"/></linearGradient></defs>
+      <rect width="64" height="64" rx="18" fill="url(#bg)"/>
+      <g transform="translate(32 35) scale(.86) translate(-32 -31)"><path d="M32 50C14 38 10 27 10 21C10 15 14.5 11.5 20 11.5C25 11.5 29.5 14 32 19C34.5 14 39 11.5 44 11.5C49.5 11.5 54 15 54 21C54 27 50 38 32 50Z" fill="#fff"/></g>
+      <path d="M51.5 9 53.1 13.1 57.2 14.7 53.1 16.3 51.5 20.4 49.9 16.3 45.8 14.7 49.9 13.1Z" fill="#fff"/>
+    </svg>
+    <b>Crafts ni Yukiii</b>
+  </div>
+</div>
 <script type="module" src="/src/main.jsx"></script>
 </body>
 </html>

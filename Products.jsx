@@ -1,9 +1,11 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import Icon from './Icon.jsx';
+import EmptyState from './EmptyState.jsx';
 import { useShop } from '../lib/ShopContext.jsx';
 import Modal from './Modal.jsx';
 import { money, uid, resizeImageFile } from '../lib/utils.js';
 import { CATEGORIES } from '../lib/constants.js';
+import { confirmDialog, toast } from '../lib/ui.js';
 
 function logStock(data, productId, name, delta, resultingStock) {
   data.stockLog.unshift({ id: uid('log'), productId, name, delta, resultingStock, date: new Date().toISOString() });
@@ -249,10 +251,10 @@ export default function Products() {
     setModal(null);
   }
 
-  function deleteProduct(id) {
+  async function deleteProduct(id) {
     const p = data.products.find((x) => x.id === id);
     if (!p) return;
-    if (!confirm(`Delete "${p.name}"? This cannot be undone.`)) return;
+    if (!(await confirmDialog(`Delete "${p.name}"? This cannot be undone.`, { confirmText: 'Delete', danger: true }))) return;
     mutate((d) => {
       d.products = d.products.filter((x) => x.id !== id);
     });
@@ -431,7 +433,13 @@ export default function Products() {
       </div>
 
       {filtered.length === 0 ? (
-        <div className="empty-box">No products match these filters.</div>
+        (data.products || []).length === 0 ? (
+          <EmptyState icon="package" title="Add your first product" action="+ Add product" onAction={openAddChooser}>
+            Your catalog is empty. Add a product with a photo, price and stock to start selling.
+          </EmptyState>
+        ) : (
+          <EmptyState icon="search" title="No products match">Try changing the search or filters.</EmptyState>
+        )
       ) : (
         <div className="plist-grid">
           {filtered.map((p) => (

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import Icon from './Icon.jsx';
 import { useShop } from '../lib/ShopContext.jsx';
+import { confirmDialog, toast } from '../lib/ui.js';
 
 export default function BackupTab() {
   const { shop, data, mutate } = useShop();
@@ -23,7 +24,7 @@ export default function BackupTab() {
     if (!file) return;
     setErrorMsg(''); setSuccessMsg('');
     const reader = new FileReader();
-    reader.onload = () => {
+    reader.onload = async () => {
       try {
         const parsed = JSON.parse(String(reader.result));
         const incoming = parsed.data || parsed;
@@ -31,7 +32,7 @@ export default function BackupTab() {
           setErrorMsg('This file does not look like a valid backup.');
           return;
         }
-        if (!confirm('This will REPLACE your current shop data with the contents of this backup. Continue?')) return;
+        if (!(await confirmDialog('This will REPLACE your current shop data with the contents of this backup. Continue?', { title: 'Restore this backup?', confirmText: 'Replace my data', danger: true }))) return;
         mutate((d) => {
           Object.assign(d, incoming);
         });

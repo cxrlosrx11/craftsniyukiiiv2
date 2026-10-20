@@ -1,9 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import Icon from './Icon.jsx';
+import Logo from './Logo.jsx';
 import { sb } from '../lib/supabaseClient';
 import { useShop } from '../lib/ShopContext.jsx';
 import { navigate } from '../lib/router.js';
 import { fmtDateTime, money } from '../lib/utils.js';
+import { confirmDialog, toast } from '../lib/ui.js';
+import { PanelLoader, SkeletonRows } from './Loader.jsx';
 
 export default function BuyerOrders() {
   const { buyer, logout } = useShop();
@@ -21,7 +24,7 @@ export default function BuyerOrders() {
   useEffect(() => { load(); }, []);
 
   async function cancel(id) {
-    if (!confirm('Cancel this order?')) return;
+    if (!(await confirmDialog('Cancel this order?', { title: 'Cancel this order?', confirmText: 'Cancel order', cancelText: 'Keep order', danger: true }))) return;
     setBusyId(id);
     await sb.rpc('cancel_order', { order_id: id });
     setBusyId('');
@@ -32,8 +35,7 @@ export default function BuyerOrders() {
     <div className="store">
       <header className="store-nav">
         <a className="store-brand" href="#/">
-          <span className="brand-logo">CY</span>
-          <span className="brand-text">Crafts ni Yukiii</span>
+          <Logo size={34} />
         </a>
         <div className="store-nav-actions">
           <button className="btn btn-ghost btn-sm" onClick={() => navigate('/account')}>My account</button>
@@ -41,9 +43,9 @@ export default function BuyerOrders() {
           <button className="btn btn-ghost btn-sm" onClick={async () => { await logout(); navigate('/'); }}>Log out</button>
         </div>
       </header>
-      <div className="store-body" style={{ maxWidth: 720 }}>
+      <div className="store-body account-body" style={{ maxWidth: 720 }}>
         <div className="page-head"><div><h1>My orders</h1><p>{buyer ? buyer.fullName : ''}</p></div></div>
-        {status === 'loading' && <div className="empty-box">Loading orders…</div>}
+        {status === 'loading' && <SkeletonRows rows={3} />}
         {status === 'error' && <div className="empty-box">Couldn't load your orders. <button className="link-btn" onClick={load}>Try again</button></div>}
         {status === 'ready' && orders.length === 0 && <div className="empty-box">No orders yet — go find something you like!</div>}
         {orders.map((o) => (

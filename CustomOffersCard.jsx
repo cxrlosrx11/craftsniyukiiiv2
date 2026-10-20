@@ -118,12 +118,13 @@ function RequestModal({ slug, offer, onClose, onDone }) {
 }
 
 // Custom order options on a seller's public page.
-export default function CustomOffersCard({ slug, isSeller }) {
+export default function CustomOffersCard({ slug, isSeller, onContent }) {
   const [offers, setOffers] = useState([]);
   const [open, setOpen] = useState(null);
   const load = () => fetchPublicOffers(slug).then(setOffers).catch((e) => console.error(e));
   useEffect(() => { setOffers([]); load(); /* eslint-disable-next-line */ }, [slug]);
 
+  useEffect(() => { if (onContent) onContent(offers.length > 0); });
   if (!offers.length) return null;
   return (
     <div className="panel" style={{ marginBottom: 18 }}>

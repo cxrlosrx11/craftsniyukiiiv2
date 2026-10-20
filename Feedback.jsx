@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import Icon from './Icon.jsx';
 import { useShop } from '../lib/ShopContext.jsx';
 import { fmtDateTime, uid } from '../lib/utils.js';
+import { confirmDialog, toast } from '../lib/ui.js';
 
 export default function Feedback() {
   const { data, mutate } = useShop();
@@ -21,8 +22,8 @@ export default function Feedback() {
     setShowAdd(false); setErrorMsg('');
   }
 
-  function deleteFeedback(id) {
-    if (!confirm('Delete this feedback entry?')) return;
+  async function deleteFeedback(id) {
+    if (!(await confirmDialog('Delete this feedback entry?', { confirmText: 'Delete', danger: true }))) return;
     mutate((d) => { d.feedback = d.feedback.filter((f) => f.id !== id); });
   }
 

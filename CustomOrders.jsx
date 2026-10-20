@@ -3,6 +3,8 @@ import Icon from './Icon.jsx';
 import Modal from './Modal.jsx';
 import { useShop } from '../lib/ShopContext.jsx';
 import { money, uid, fmtDateTime } from '../lib/utils.js';
+import { confirmDialog, toast } from '../lib/ui.js';
+import { PanelLoader, SkeletonRows } from './Loader.jsx';
 import {
   KINDS, ACTIVE, STATUS_LABEL, newId, listOffers, saveOffer, setOfferOpen, deleteOffer, listRequests,
   setRequestStatus, updateQuote, selectionLines, addDaysStr
@@ -63,7 +65,7 @@ export default function CustomOrders() {
 
   async function removeOffer(o) {
     const n = activeCount(o);
-    if (!confirm(n ? `Delete "${o.title}"? ${n} active request(s) will be deleted with it.` : `Delete "${o.title}"?`)) return;
+    if (!(await confirmDialog(n ? `Delete "${o.title}"? ${n} active request(s) will be deleted with it.` : `Delete "${o.title}"?`, { confirmText: 'Delete', danger: true }))) return;
     try { await deleteOffer(o.id); await load(); } catch (ex) { setErr(ex.message || "Couldn't delete."); }
   }
 
@@ -117,7 +119,7 @@ export default function CustomOrders() {
     setBusy('');
   }
 
-  if (state === 'loading') return <div className="empty-box">Loading…</div>;
+  if (state === 'loading') return <PanelLoader />;
   if (state === 'error') return <div className="empty-box">Couldn't load custom orders. Did you run <code>supabase-custom-orders.sql</code> in Supabase? <button className="link-btn" onClick={load}>Try again</button></div>;
 
   return (
@@ -192,7 +194,7 @@ export default function CustomOrders() {
                       <button className="btn btn-primary btn-sm" disabled={busy === r.id} onClick={() => move(r, 'Completed')}>Paid &amp; handed over</button>
                     </>}
                     {r.status !== 'Requested' && <button className="link-btn" disabled={busy === r.id} onClick={() => saveQuote(r)}>Update price / date / message</button>}
-                    {r.status !== 'Requested' && <button className="link-btn" disabled={busy === r.id} onClick={() => confirm('Cancel this request?') && move(r, 'Cancelled')}>Cancel</button>}
+                    {r.status !== 'Requested' && <button className="link-btn" disabled={busy === r.id} onClick={async () => { if (await confirmDialog('Cancel this request?', { confirmText: 'Cancel request', cancelText: 'Keep it', danger: true })) move(r, 'Cancelled'); }}>Cancel</button>}
                   </div>
                 </div>
               )}

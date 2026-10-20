@@ -3,6 +3,8 @@ import Icon from './Icon.jsx';
 import Modal from './Modal.jsx';
 import { useShop } from '../lib/ShopContext.jsx';
 import { money, uid, fmtDateTime } from '../lib/utils.js';
+import { confirmDialog, toast } from '../lib/ui.js';
+import { PanelLoader, SkeletonRows } from './Loader.jsx';
 import {
   listEvents, saveEvent, deleteEvent, setReserveEnabled, listReservations, setReservationStatus,
   fmtRange, itemsText, todayStr
@@ -47,7 +49,7 @@ export default function ConventionMode() {
 
   async function removeEvent(ev) {
     const n = resv.filter((r) => r.event_id === ev.id && ['Reserved', 'Ready'].includes(r.status)).length;
-    if (!confirm(n ? `Delete "${ev.name}"? ${n} active reservation(s) will be deleted with it.` : `Delete "${ev.name}"?`)) return;
+    if (!(await confirmDialog(n ? `Delete "${ev.name}"? ${n} active reservation(s) will be deleted with it.` : `Delete "${ev.name}"?`, { confirmText: 'Delete', danger: true }))) return;
     try { await deleteEvent(ev.id); await load(); } catch (ex) { setErr(ex.message || "Couldn't delete."); }
   }
 
@@ -178,7 +180,7 @@ export default function ConventionMode() {
     );
   };
 
-  if (state === 'loading') return <div className="empty-box">Loading…</div>;
+  if (state === 'loading') return <PanelLoader />;
   if (state === 'error') return <div className="empty-box">Couldn't load Convention Mode. Did you run <code>supabase-convention-mode.sql</code> in Supabase? <button className="link-btn" onClick={load}>Try again</button></div>;
 
   return (

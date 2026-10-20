@@ -3,6 +3,7 @@ import Icon from './Icon.jsx';
 import { useShop } from '../lib/ShopContext.jsx';
 import Modal from './Modal.jsx';
 import { uid } from '../lib/utils.js';
+import { confirmDialog, toast } from '../lib/ui.js';
 
 export default function Conventions() {
   const { data, mutate } = useShop();
@@ -31,8 +32,8 @@ export default function Conventions() {
     setModal(null); setErrorMsg('');
   }
 
-  function deleteConvention(id) {
-    if (!confirm('Delete this convention entry?')) return;
+  async function deleteConvention(id) {
+    if (!(await confirmDialog('Delete this convention entry?', { confirmText: 'Delete', danger: true }))) return;
     mutate((d) => { d.conventions = d.conventions.filter((c) => c.id !== id); });
   }
 

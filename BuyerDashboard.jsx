@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import Icon from './Icon.jsx';
+import Logo from './Logo.jsx';
 import { sb } from '../lib/supabaseClient';
 import { useShop } from '../lib/ShopContext.jsx';
 import { saveBuyerContact } from '../lib/api.js';
@@ -8,6 +9,8 @@ import { myReservations, cancelReservation, fmtRange, itemsText } from '../lib/p
 import { myRequests, cancelRequest, selectionLines, STATUS_LABEL } from '../lib/customOrders.js';
 import { navigate } from '../lib/router.js';
 import { fmtDateTime, money } from '../lib/utils.js';
+import { confirmDialog, toast } from '../lib/ui.js';
+import { PanelLoader, SkeletonRows } from './Loader.jsx';
 
 // The buyer's own home. Sellers never see this page and buyers never see the
 // seller dashboard (see the route guards in App.jsx).
@@ -61,8 +64,7 @@ export default function BuyerDashboard() {
     <div className="store">
       <header className="store-nav">
         <a className="store-brand" href="#/">
-          <span className="brand-logo">CY</span>
-          <span className="brand-text">Crafts ni Yukiii</span>
+          <Logo size={34} />
         </a>
         <div className="store-nav-actions">
           <button className="btn btn-ghost btn-sm" onClick={() => navigate('/')}><Icon name="shopbag" size={15} /> Shop</button>
@@ -71,7 +73,7 @@ export default function BuyerDashboard() {
         </div>
       </header>
 
-      <div className="store-body" style={{ maxWidth: 720 }}>
+      <div className="store-body account-body" style={{ maxWidth: 720 }}>
         <div className="page-head">
           <div><h1>Hi, {(buyer.fullName || '').split(' ')[0] || 'there'}</h1><p>Your buyer account · {buyer.email}</p></div>
           <button className="btn btn-primary" onClick={() => navigate('/')}><Icon name="shopbag" size={16} /> Keep shopping</button>
@@ -88,7 +90,7 @@ export default function BuyerDashboard() {
             <div className="panel-title">Recent orders</div>
             <button className="view-all" onClick={() => navigate('/orders')}>View all</button>
           </div>
-          {status === 'loading' && <div className="empty-box">Loading orders…</div>}
+          {status === 'loading' && <SkeletonRows rows={3} />}
           {status === 'error' && <div className="empty-box">Couldn't load your orders. <button className="link-btn" onClick={load}>Try again</button></div>}
           {status === 'ready' && recent.length === 0 && <div className="empty-box">No orders yet. Go find something you like!</div>}
           {recent.map((o) => (
@@ -123,7 +125,7 @@ export default function BuyerDashboard() {
                 <div className="ins-side">
                   <span className={'order-badge ' + (r.status === 'Requested' ? 'pending' : ['Declined', 'Cancelled'].includes(r.status) ? 'declined' : 'confirmed')}>{STATUS_LABEL[r.status]}</span>
                   {(r.status === 'Requested' || r.status === 'Accepted') && (
-                    <div><button className="link-btn" onClick={async () => { if (confirm('Cancel this request?')) { try { await cancelRequest(r.id); } catch (e) { alert(e.message); } reloadCustom(); } }}>Cancel</button></div>
+                    <div><button className="link-btn" onClick={async () => { if (await confirmDialog('Cancel this request?', { confirmText: 'Cancel request', cancelText: 'Keep it', danger: true })) { try { await cancelRequest(r.id); toast('Request cancelled', 'success'); } catch (e) { toast(e.message, 'error'); } reloadCustom(); } }}>Cancel</button></div>
                   )}
                 </div>
               </div>
@@ -146,7 +148,7 @@ export default function BuyerDashboard() {
                     {r.status === 'PickedUp' ? 'Picked up' : r.status === 'NoShow' ? 'Missed' : r.status}
                   </span>
                   {(r.status === 'Reserved' || r.status === 'Ready') && (
-                    <div><button className="link-btn" onClick={async () => { if (confirm('Cancel this reservation?')) { try { await cancelReservation(r.id); } catch (e) { alert(e.message); } reloadPickups(); } }}>Cancel</button></div>
+                    <div><button className="link-btn" onClick={async () => { if (await confirmDialog('Cancel this reservation?', { confirmText: 'Cancel reservation', cancelText: 'Keep it', danger: true })) { try { await cancelReservation(r.id); toast('Reservation cancelled', 'success'); } catch (e) { toast(e.message, 'error'); } reloadPickups(); } }}>Cancel</button></div>
                   )}
                 </div>
               </div>

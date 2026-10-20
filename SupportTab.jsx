@@ -6,6 +6,8 @@ import { fmtDateTime, money } from '../lib/utils.js';
 import { resizeImageFile, coverFromFile } from '../lib/utils.js';
 import { THEMES, THEME_KEYS, STATUSES } from '../lib/themes.js';
 import { emptySupport, loadSupport, saveSupport, restartGoal, loadTips, reviewTip } from '../lib/support.js';
+import { confirmDialog, toast } from '../lib/ui.js';
+import { PanelLoader, SkeletonRows } from './Loader.jsx';
 
 const METHOD_HINTS = ['GCash', 'Maya', 'GoTyme'];
 
@@ -83,11 +85,11 @@ export default function SupportTab() {
   }
 
   async function newGoal() {
-    if (!confirm('Start a new goal? The progress bar goes back to zero. Past tips stay in your list.')) return;
+    if (!(await confirmDialog('Start a new goal? The progress bar goes back to zero. Past tips stay in your list.', { title: 'Start a new goal?', confirmText: 'Start new goal' }))) return;
     try { await restartGoal(shop.id); setMsg('New goal started.'); } catch (err) { console.error(err); setMsg("Couldn't restart the goal."); }
   }
 
-  if (loadState === 'loading') return <div className="empty-box">Loading…</div>;
+  if (loadState === 'loading') return <PanelLoader />;
   if (loadState === 'error') {
     return <div className="empty-box">Couldn't load this page. Did you run <code>supabase-support.sql</code> in Supabase? <button className="link-btn" onClick={load}>Try again</button></div>;
   }

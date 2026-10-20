@@ -4,6 +4,7 @@ import { useShop } from '../lib/ShopContext.jsx';
 import Modal from './Modal.jsx';
 import { money, uid, toPHP, fromPHP } from '../lib/utils.js';
 import { COST_TYPES } from '../lib/constants.js';
+import { confirmDialog, toast } from '../lib/ui.js';
 
 export default function Costs() {
   const { shop, data, mutate } = useShop();
@@ -47,8 +48,8 @@ export default function Costs() {
     setModal(null); setErrorMsg('');
   }
 
-  function deleteCost(id) {
-    if (!confirm('Delete this expense?')) return;
+  async function deleteCost(id) {
+    if (!(await confirmDialog('Delete this expense?', { confirmText: 'Delete', danger: true }))) return;
     mutate((d) => { d.costs = d.costs.filter((c) => c.id !== id); });
   }
 
