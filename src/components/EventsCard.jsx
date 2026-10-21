@@ -97,14 +97,16 @@ function ReserveModal({ slug, ev, items, held, onClose, onDone }) {
 }
 
 // "Find me at": upcoming conventions on a seller's public page, with pickup reservations.
-export default function EventsCard({ slug, items, isSeller }) {
+export default function EventsCard({ slug, items, isSeller, onContent }) {
   const [info, setInfo] = useState(null);
   const [open, setOpen] = useState(null);
 
   const load = () => fetchPublicEvents(slug).then(setInfo).catch((e) => console.error(e));
   useEffect(() => { setInfo(null); load(); /* eslint-disable-next-line */ }, [slug]);
 
-  if (!info || !info.events || info.events.length === 0) return null;
+  const hasEvents = !!(info && info.events && info.events.length);
+  useEffect(() => { if (onContent) onContent(hasEvents); });
+  if (!hasEvents) return null;
   return (
     <div className="panel" style={{ marginBottom: 18 }}>
       <div className="panel-head"><div className="panel-title"><Icon name="convention" size={17} /> Find me at</div></div>

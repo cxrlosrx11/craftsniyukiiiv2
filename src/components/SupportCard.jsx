@@ -107,7 +107,7 @@ function TipModal({ slug, info, onClose }) {
 // Shown at the top of a single seller's shop page: announcement, about, links,
 // funding goal, tip jar and supporter wall. Renders nothing if the seller has
 // not set any of it up.
-export default function SupportCard({ slug }) {
+export default function SupportCard({ slug, part = 'all', onContent }) {
   const { shop } = useShop();
   const [info, setInfo] = useState(null);
   const [open, setOpen] = useState(false);
@@ -119,18 +119,20 @@ export default function SupportCard({ slug }) {
     return () => { alive = false; };
   }, [slug]);
 
+  const links = info ? (info.links || []).map((l) => ({ label: l.label, url: safeUrl(l.url) })).filter((l) => l.url) : [];
+  const hasGoal = !!(info && info.enabled && info.goalAmount > 0);
+  const aboutContent = !!(info && (info.bio || links.length || info.enabled));
+  useEffect(() => { if (onContent && part === 'about') onContent(aboutContent); });
   if (!info) return null;
-  const links = (info.links || []).map((l) => ({ label: l.label, url: safeUrl(l.url) })).filter((l) => l.url);
-  const hasGoal = info.enabled && info.goalAmount > 0;
-  const anything = info.announcement || info.bio || links.length || info.enabled;
+  const anything = info.announcement || aboutContent;
   if (!anything) return null;
   const pct = hasGoal ? Math.min(100, Math.round((info.raised / info.goalAmount) * 100)) : 0;
   const cur = info.currency || 'PHP';
 
   return (
-    <div style={{ marginBottom: 18 }}>
-      {info.announcement && <div className="support-banner"><Icon name="sparkles" size={16} /> {info.announcement}</div>}
-      {(info.bio || links.length > 0 || info.enabled) && (
+    <div style={{ marginBottom: part === 'banner' ? 8 : 18 }}>
+      {part !== 'about' && info.announcement && <div className="support-banner"><Icon name="sparkles" size={16} /> {info.announcement}</div>}
+      {part !== 'banner' && aboutContent && (
         <div className="panel">
           {info.bio && <p style={{ marginTop: 0, whiteSpace: 'pre-line' }}>{info.bio}</p>}
           {links.length > 0 && (

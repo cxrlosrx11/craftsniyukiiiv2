@@ -4,10 +4,12 @@ import {
   Home01Icon, PackageIcon, ShoppingCart01Icon, ShoppingBag01Icon, PackageReceiveIcon,
   Ticket01Icon, Wallet01Icon, Analytics01Icon, Invoice01Icon, Store01Icon, MailSend01Icon,
   Message01Icon, Upload04Icon, DatabaseSync01Icon, Cancel01Icon, Menu01Icon,
-  ArrowLeft01Icon, ArrowRight01Icon, ArrowUp01Icon, ArrowDown01Icon, Download04Icon,
+  ArrowLeft01Icon, ArrowRight01Icon, ArrowUp01Icon, ArrowDown01Icon, Download01Icon,
   Alert02Icon, PencilEdit01Icon, Delete02Icon, Archive02Icon, Call02Icon, Location01Icon,
   Note01Icon, Tick02Icon, RefreshIcon, Search01Icon, Add01Icon, Layers01Icon, Camera01Icon,
-  Undo02Icon, Logout01Icon, GiftIcon, Image01Icon, CheckmarkCircle02Icon, StarIcon, SparklesIcon, FavouriteIcon, UserAdd01Icon, UserCheck01Icon, Album01Icon, Award01Icon, Download01Icon
+  Undo02Icon, Logout01Icon, GiftIcon, Image01Icon, CheckmarkCircle02Icon, StarIcon, SparklesIcon,
+  FavouriteIcon, UserAdd01Icon, UserCheck01Icon, Album01Icon, Award01Icon,
+  Calendar03Icon, PaintBrush01Icon, UserGroupIcon
 } from '@hugeicons/core-free-icons';
 
 // One place to see (and change) every icon in the app.
@@ -18,16 +20,18 @@ const ICONS = {
   reports: Analytics01Icon, breakdown: Invoice01Icon, store: Store01Icon, invite: MailSend01Icon,
   feedback: Message01Icon, import: Upload04Icon, backup: DatabaseSync01Icon,
   close: Cancel01Icon, menu: Menu01Icon, back: ArrowLeft01Icon, forward: ArrowRight01Icon,
-  up: ArrowUp01Icon, down: ArrowDown01Icon, download: Download04Icon, warning: Alert02Icon,
+  up: ArrowUp01Icon, down: ArrowDown01Icon, download: Download01Icon, warning: Alert02Icon,
   edit: PencilEdit01Icon, trash: Delete02Icon, archive: Archive02Icon, phone: Call02Icon,
   pin: Location01Icon, note: Note01Icon, check: Tick02Icon, refresh: RefreshIcon,
   search: Search01Icon, add: Add01Icon, layers: Layers01Icon, camera: Camera01Icon,
   undo: Undo02Icon, logout: Logout01Icon, gift: GiftIcon, image: Image01Icon,
-  success: CheckmarkCircle02Icon, star: StarIcon, sparkles: SparklesIcon, heart: FavouriteIcon, follow: UserAdd01Icon, following: UserCheck01Icon, album: Album01Icon, award: Award01Icon, download: Download01Icon, pin: Location01Icon
+  success: CheckmarkCircle02Icon, star: StarIcon, sparkles: SparklesIcon, heart: FavouriteIcon,
+  follow: UserAdd01Icon, following: UserCheck01Icon, album: Album01Icon, award: Award01Icon,
+  calendar: Calendar03Icon, brush: PaintBrush01Icon, users: UserGroupIcon
 };
 
 export default function Icon({ name, size = 18, className = '', ...rest }) {
   const icon = ICONS[name];
   if (!icon) return null;
-  return <HugeiconsIcon icon={icon} size={size} strokeWidth={1.8} className={('hi ' + className).trim()} {...rest} />;
+  return <HugeiconsIcon icon={icon} size={size} strokeWidth={1.8} className={('hi ' + className).trim()} aria-hidden="true" {...rest} />;
 }

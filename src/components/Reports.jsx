@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import Icon from './Icon.jsx';
 import { useShop } from '../lib/ShopContext.jsx';
 import { money, fmtDateTime, toPHP, fromPHP } from '../lib/utils.js';
+import { confirmDialog, toast } from '../lib/ui.js';
 
 export default function Reports() {
   const { shop, data, mutate } = useShop();
@@ -23,10 +24,10 @@ export default function Reports() {
     return { revenuePHP, unitsSold, count: data.sales.length };
   }, [data.sales, cur]);
 
-  function undoSale(id) {
+  async function undoSale(id) {
     const sale = data.sales.find((s) => s.id === id);
     if (!sale) return;
-    if (!confirm('Undo this sale? Stock will be restored and it will be removed from your records.')) return;
+    if (!(await confirmDialog('Undo this sale? Stock will be restored and it will be removed from your records.', { title: 'Undo this sale?', confirmText: 'Undo sale', danger: true }))) return;
     mutate((d) => {
       sale.items.forEach((it) => {
         const p = d.products.find((x) => x.id === it.productId);

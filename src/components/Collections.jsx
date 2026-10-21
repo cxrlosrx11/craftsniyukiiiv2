@@ -3,6 +3,8 @@ import Icon from './Icon.jsx';
 import Modal from './Modal.jsx';
 import { useShop } from '../lib/ShopContext.jsx';
 import { listCollections, saveCollection, setPublished, deleteCollection, collectionStats } from '../lib/collections.js';
+import { confirmDialog, toast } from '../lib/ui.js';
+import { PanelLoader, SkeletonRows } from './Loader.jsx';
 
 const blank = () => ({ id: null, title: '', description: '', perk: '', productIds: [], isPublished: true });
 
@@ -43,14 +45,14 @@ export default function Collections() {
     setBusy(false);
   }
   async function remove(c) {
-    if (!confirm(`Delete the set "${c.title}"? Buyers' progress on it is removed too.`)) return;
+    if (!(await confirmDialog(`Delete the set "${c.title}"? Buyers' progress on it is removed too.`, { confirmText: 'Delete', danger: true }))) return;
     try { await deleteCollection(c.id); await load(); } catch (ex) { setErr(ex.message || "Couldn't delete."); }
   }
   async function toggle(c) {
     try { await setPublished(c.id, !c.is_published); await load(); } catch (ex) { setErr(ex.message || "Couldn't update."); }
   }
 
-  if (state === 'loading') return <div className="empty-box">Loading…</div>;
+  if (state === 'loading') return <PanelLoader />;
   if (state === 'error') return <div className="empty-box">Couldn't load sets. Did you run <code>supabase-collections.sql</code> in Supabase? <button className="link-btn" onClick={load}>Try again</button></div>;
 
   const shownProducts = products.filter((p) => !search || p.name.toLowerCase().includes(search.toLowerCase()));

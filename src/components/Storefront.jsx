@@ -13,6 +13,10 @@ import EventsCard from './EventsCard.jsx';
 import CustomOffersCard from './CustomOffersCard.jsx';
 import CollectionsCard from './CollectionsCard.jsx';
 import ProfileHeader from './ProfileHeader.jsx';
+import Logo from './Logo.jsx';
+import EmptyState from './EmptyState.jsx';
+import { SkeletonGrid } from './Loader.jsx';
+import { toast } from '../lib/ui.js';
 import LikeButton from './LikeButton.jsx';
 import { fetchProfile, toggleFollow, toggleLike } from '../lib/social.js';
 import { themeStyle } from '../lib/themes.js';
@@ -41,6 +45,10 @@ export default function Storefront({ slug }) {
   const socialRef = useRef({});
   socialRef.current = social;
   const [followBusy, setFollowBusy] = useState(false);
+  const [ptab, setPtab] = useState('shop');
+  const [has, setHas] = useState({});
+  const mark = useCallback((k, v) => setHas((h) => (h[k] === v ? h : { ...h, [k]: v })), []);
+  useEffect(() => { setPtab('shop'); setHas({}); }, [slug]);
   const [directory, setDirectory] = useState([]);
   useEffect(() => {
     if (slug) return;
@@ -69,7 +77,7 @@ export default function Storefront({ slug }) {
     try {
       const r = await toggleFollow(s);
       setSocial((m) => ({ ...m, [s]: { ...m[s], following: r.following, followers: r.followers } }));
-    } catch (err) { alert(err.message || 'Could not update your follow. Please try again.'); }
+    } catch (err) { toast(err.message || 'Could not update your follow. Please try again.', 'error'); }
     setFollowBusy(false);
   }
 
@@ -85,7 +93,7 @@ export default function Storefront({ slug }) {
         const total = Object.values(counts).reduce((a, b) => a + b, 0);
         return { ...m, [p.shopSlug]: { ...cur, likeCounts: counts, myLikes: mine, totalLikes: total } };
       });
-    } catch (err) { alert(err.message || 'Could not save your like. Please try again.'); }
+    } catch (err) { toast(err.message || 'Could not save your like. Please try again.', 'error'); }
   }
   const likeInfo = (p) => {
     const s = social[p.shopSlug];
@@ -220,10 +228,7 @@ export default function Storefront({ slug }) {
   return (
     <div className="store" style={slug && social[slug] ? themeStyle(social[slug].theme) : undefined}>
       <header className="store-nav">
-        <a className="store-brand" href="#/">
-          <span className="brand-logo">CY</span>
-          <span className="brand-text">Crafts ni Yukiii</span>
-        </a>
+        <Logo href="#/" size={34} className="store-brand" />
         <div className="store-nav-actions">
           {!shop && (
             <button className="btn btn-ghost btn-sm" onClick={() => setCartStep('cart')}>
@@ -254,28 +259,41 @@ export default function Storefront({ slug }) {
         />
       ) : (
         <section className="store-hero">
-          <h1>{slug ? heading : 'Shop handmade crafts'}</h1>
+          <h1>{slug ? heading : <>Shop <em>handmade</em> crafts</>}</h1>
           <p>{slug ? 'Browse what is in stock right now.' : 'Pins, prints, charms and more — fresh from our small-shop sellers.'}</p>
           {slug && <a className="link-btn" href="#/"><Icon name="back" size={13} /> All shops</a>}
         </section>
       )}
 
       <div className="store-body">
-        {slug && <SupportCard slug={slug} />}
-        {slug && <EventsCard slug={slug} items={items.filter((i) => i.shopSlug === slug)} isSeller={!!shop} />}
-        {slug && <CollectionsCard slug={slug} items={items.filter((i) => i.shopSlug === slug)} isSeller={!!shop} onAddPieces={(list) => list.forEach((p) => cart.add(p, 1))} />}
-        {slug && <CustomOffersCard slug={slug} isSeller={!!shop} />}
-        {slug && featuredItems.length > 0 && (
-          <div style={{ marginBottom: 18 }}>
-            <div className="side-section" style={{ padding: '0 0 8px' }}>Featured</div>
-            <div className="store-grid">{featuredItems.map((p) => renderCard(p, 'f-'))}</div>
-          </div>
-        )}
-        {slug && social[slug] && social[slug].policies && (
-          <details className="panel" style={{ marginBottom: 18 }}>
-            <summary style={{ cursor: 'pointer', fontWeight: 700 }}>Shipping &amp; shop policies</summary>
-            <p style={{ whiteSpace: 'pre-line', margin: '10px 0 0' }}>{social[slug].policies}</p>
-          </details>
+        {slug && <SupportCard slug={slug} part="banner" />}
+        {slug && (() => {
+          const prof = social[slug];
+          const aboutHas = !!(has.about || (prof && prof.policies));
+          const tabs = [['shop', 'Shop', true], ['about', 'About', aboutHas], ['events', 'Events', has.events], ['custom', 'Custom orders', has.custom], ['collections', 'Collections', has.collections]].filter((t) => t[2]);
+          return tabs.length > 1 ? (
+            <div className="ptabs" role="tablist" aria-label="Seller profile sections">
+              {tabs.map(([k, label]) => (
+                <button key={k} type="button" role="tab" className="ptab" aria-selected={ptab === k} onClick={() => setPtab(k)}>{label}</button>
+              ))}
+            </div>
+          ) : null;
+        })()}
+        {slug && (
+          <>
+            <div className="profile-pane" hidden={ptab !== 'about'}>
+              <SupportCard slug={slug} part="about" onContent={(v) => mark('about', v)} />
+              {social[slug] && social[slug].policies && (
+                <div className="panel">
+                  <div className="panel-head"><div className="panel-title"><Icon name="orders" size={17} /> Shipping &amp; shop policies</div></div>
+                  <p style={{ whiteSpace: 'pre-line', margin: 0 }}>{social[slug].policies}</p>
+                </div>
+              )}
+            </div>
+            <div className="profile-pane" hidden={ptab !== 'events'}><EventsCard slug={slug} items={items.filter((i) => i.shopSlug === slug)} isSeller={!!shop} onContent={(v) => mark('events', v)} /></div>
+            <div className="profile-pane" hidden={ptab !== 'collections'}><CollectionsCard slug={slug} items={items.filter((i) => i.shopSlug === slug)} isSeller={!!shop} onAddPieces={(list) => { list.forEach((p) => cart.add(p, 1)); toast(`Added ${list.length} to your cart`, 'success'); }} onContent={(v) => mark('collections', v)} /></div>
+            <div className="profile-pane" hidden={ptab !== 'custom'}><CustomOffersCard slug={slug} isSeller={!!shop} onContent={(v) => mark('custom', v)} /></div>
+          </>
         )}
         {!slug && directory.length > 0 && (
           <div style={{ marginBottom: 14 }}>
@@ -288,6 +306,13 @@ export default function Storefront({ slug }) {
                 </a>
               ))}
             </div>
+          </div>
+        )}
+        <div className="profile-pane" hidden={!!slug && ptab !== 'shop'}>
+        {slug && featuredItems.length > 0 && (
+          <div style={{ marginBottom: 18 }}>
+            <div className="side-section" style={{ padding: '0 0 8px' }}>Featured</div>
+            <div className="store-grid">{featuredItems.map((p) => renderCard(p, 'f-'))}</div>
           </div>
         )}
         <div className="store-filters">
@@ -305,7 +330,7 @@ export default function Storefront({ slug }) {
           ))}
         </div>
 
-        {status === 'loading' && <div className="empty-box">Loading products…</div>}
+        {status === 'loading' && <SkeletonGrid n={8} />}
         {status === 'error' && (
           <div className="empty-box">
             Couldn't load the shop right now.{' '}
@@ -313,11 +338,14 @@ export default function Storefront({ slug }) {
           </div>
         )}
         {status === 'ready' && filtered.length === 0 && (
-          <div className="empty-box">{items.length ? 'No products match your search.' : 'Nothing in stock yet — check back soon!'}</div>
+          <EmptyState icon={items.length ? 'search' : 'package'} title={items.length ? 'No matches' : 'Nothing in stock yet'}>
+            {items.length ? 'Try a different search or category.' : 'New pieces are on the way. Check back soon!'}
+          </EmptyState>
         )}
 
         <div className="store-grid">
           {filtered.map((p) => renderCard(p))}
+        </div>
         </div>
       </div>
 
@@ -447,8 +475,17 @@ export default function Storefront({ slug }) {
       )}
 
       <footer className="store-footer">
-        © Crafts ni Yukiii
-        {!shop && !buyer && <> · <button className="link-btn" onClick={() => { setAuthView('login'); navigate('/login'); }}>Sign in</button></>}
+        <div className="footer-inner">
+          <Logo size={30} />
+          <p className="footer-tag">Small shops, big hearts. Handmade finds from makers near you.</p>
+          <div className="footer-links">
+            <a href="#/">All shops</a>
+            {!shop && !buyer && <a onClick={() => { setAuthView('signup'); setAuthRole('seller'); navigate('/login'); }}>Sell on Crafts ni Yukiii</a>}
+            {!shop && !buyer && <a onClick={() => { setAuthView('login'); navigate('/login'); }}>Sign in</a>}
+            {shop && <a onClick={() => navigate('/dashboard')}>Dashboard</a>}
+          </div>
+          <div className="footer-copy">© {new Date().getFullYear()} Crafts ni Yukiii</div>
+        </div>
       </footer>
     </div>
   );

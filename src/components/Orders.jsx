@@ -3,6 +3,8 @@ import Icon from './Icon.jsx';
 import { sb } from '../lib/supabaseClient';
 import { useShop } from '../lib/ShopContext.jsx';
 import { fmtDateTime, money, uid } from '../lib/utils.js';
+import { confirmDialog, toast } from '../lib/ui.js';
+import { PanelLoader, SkeletonRows } from './Loader.jsx';
 
 export default function Orders() {
   const { shop, data, mutate } = useShop();
@@ -63,7 +65,7 @@ export default function Orders() {
   }
 
   async function declineOrder(o) {
-    if (!confirm('Decline this order? The buyer will see it as declined.')) return;
+    if (!(await confirmDialog('Decline this order? The buyer will see it as declined.', { title: 'Decline this order?', confirmText: 'Decline order', cancelText: 'Keep it', danger: true }))) return;
     setBusyId(o.id);
     await sb.from('orders').update({ status: 'Declined', updated_at: new Date().toISOString() }).eq('id', o.id).eq('status', 'Pending');
     setBusyId('');
@@ -85,7 +87,7 @@ export default function Orders() {
         ))}
       </div>
       {errorMsg && <div className="form-error">{errorMsg}</div>}
-      {status === 'loading' && <div className="empty-box">Loading orders…</div>}
+      {status === 'loading' && <SkeletonRows rows={3} />}
       {status === 'error' && <div className="empty-box">Couldn't load orders. Did you run <code>supabase-buyers-orders.sql</code>? <button className="link-btn" onClick={load}>Try again</button></div>}
       {status === 'ready' && shown.length === 0 && <div className="empty-box">No {filter === 'All' ? '' : filter.toLowerCase() + ' '}orders.</div>}
       {shown.map((o) => (

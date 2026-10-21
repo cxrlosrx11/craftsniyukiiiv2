@@ -3,12 +3,13 @@ import Icon from './Icon.jsx';
 import { useShop } from '../lib/ShopContext.jsx';
 import { navigate } from '../lib/router.js';
 import { money } from '../lib/utils.js';
+import { toast } from '../lib/ui.js';
 import { fetchPublicCollections, toggleOwned, syncOwned, detectOwnedFromPurchases } from '../lib/collections.js';
 
 const RETURN_KEY = 'cy_return_to';
 
 // "Collect the set" on a seller's public page.
-export default function CollectionsCard({ slug, items, isSeller, onAddPieces }) {
+export default function CollectionsCard({ slug, items, isSeller, onAddPieces, onContent }) {
   const { buyer, setAuthRole, setAuthView } = useShop();
   const [cols, setCols] = useState(null);
   const [msg, setMsg] = useState('');
@@ -39,9 +40,10 @@ export default function CollectionsCard({ slug, items, isSeller, onAddPieces }) 
   }
 
   async function tick(pid) {
-    try { await toggleOwned(slug, pid); await load(); } catch (e) { alert(e.message || 'Could not update.'); }
+    try { await toggleOwned(slug, pid); await load(); } catch (e) { toast(e.message || 'Could not update.', 'error'); }
   }
 
+  useEffect(() => { if (onContent) onContent(!!(cols && cols.length)); });
   if (!cols || cols.length === 0) return null;
   return (
     <div style={{ marginBottom: 18 }}>
