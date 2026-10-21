@@ -21,6 +21,10 @@ import ConventionMode from './components/ConventionMode.jsx';
 import CustomOrders from './components/CustomOrders.jsx';
 import Collections from './components/Collections.jsx';
 import Wrapped from './components/Wrapped.jsx';
+import Topbar from './components/Topbar.jsx';
+import { LogoMark } from './components/Logo.jsx';
+import { Splash } from './components/Loader.jsx';
+import { tabLabel } from './components/Sidebar.jsx';
 import Storefront from './components/Storefront.jsx';
 import Orders from './components/Orders.jsx';
 import BuyerOrders from './components/BuyerOrders.jsx';
@@ -52,7 +56,7 @@ export default function App() {
   }, [booting, shop, buyer, route.name]);
 
   if (booting) {
-    return <div className="loading-screen">Loading Crafts ni Yukiii…</div>;
+    return <Splash label="Opening your shop" />;
   }
 
   // Public pages: the shop is the landing page.
@@ -71,12 +75,10 @@ export default function App() {
 
   if (loadError) {
     return (
-      <div className="loading-screen" style={{ flexDirection: 'column', gap: 14, textAlign: 'center', padding: 24 }}>
-        <p style={{ maxWidth: 420 }}>We couldn't load your shop data just now.</p>
-        <p style={{ maxWidth: 420, fontWeight: 400, fontSize: 14, color: 'var(--muted)' }}>
-          To make sure nothing gets overwritten, editing is paused until this loads successfully.
-          Please check your connection and try again.
-        </p>
+      <div className="state-screen">
+        <LogoMark size={56} />
+        <h2>We couldn't load your shop just now</h2>
+        <p>To make sure nothing gets overwritten, editing is paused until your data loads successfully. Please check your connection and try again.</p>
         <button className="btn btn-primary" onClick={retryLoad}>Try again</button>
       </div>
     );
@@ -114,13 +116,13 @@ export default function App() {
 
   return (
     <div id="app">
-      {!navOpen && (
-        <button className="nav-fab" title="Show menu" onClick={() => setNavOpen(true)}><Icon name="menu" size={20} /></button>
-      )}
       <div className={shellClass}>
         <Sidebar sellerTab={sellerTab} setSellerTab={setSellerTab} navOpen={navOpen} setNavOpen={setNavOpen} />
         {navOpen && <div className="nav-backdrop" onClick={() => setNavOpen(false)} />}
-        <main className="main">{content}</main>
+        <div className="main-col">
+          <Topbar title={tabLabel(sellerTab)} onMenu={() => setNavOpen(true)} onQuickSale={() => setSellerTab('pos')} />
+          <main className="main" id="main">{content}</main>
+        </div>
       </div>
     </div>
   );
